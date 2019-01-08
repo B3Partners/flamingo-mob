@@ -63,7 +63,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 this.createFilterContainer(),
                 this.createForm()
             ]
-        })
+        });
         this.getContentContainer().add(this.container);
     },
     updateSelection: function(bedrijventerrein) {
