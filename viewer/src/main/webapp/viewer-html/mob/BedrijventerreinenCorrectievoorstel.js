@@ -5,7 +5,7 @@
  */
 
 
-/* global Ext */
+/* global Ext, FlamingoAppLoader */
 
 Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     extend: "viewer.components.Component",
@@ -24,14 +24,18 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         }
     },
     constructor: function (conf) {
-        if (!Ext.isDefined(conf.showLabels))
+        if (!Ext.isDefined(conf.showLabels)){
             conf.showLabels = true;
+        }
         this.initConfig(conf);
         viewer.components.BedrijventerreinenCorrectievoorstel.superclass.constructor.call(this, this.config);
-
-        this.loadWindow();
+        this.createStores();
         return this;
     },
+    newCorrection: function(){
+        
+    },
+    
     loadWindow: function () {
         var me = this;
         this.renderButton({
@@ -49,11 +53,12 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                 type: 'hbox',
                 align: 'stretch'
             },
+                width: 600,
+                height: 600,
             padding: '5px',
             items: this.createForm()
 
         });
-        //this.getContentContainer().add(this.container);
         this.createButtons();
     },
     createForm: function () {
@@ -73,9 +78,9 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                     ]
                 },
                 {
-                    xtype: 'container', layout: {type: 'column'}, defaults: {padding: '5px'}, items:[
-                        {xtype: 'combobox',labelAlign:'top', name: 'classificatie', fieldLabel: "Voorgestelde classificatie", value: "Langdurige verhuur", store: this.stores.classificaties},
-                        {xtype:'filefield',labelAlign:'top', fieldLabel: "Upload", buttonOnly:true, buttonText:'Upload shp-zip, pdf, ...', itemId:'shp'}
+                    xtype: 'container', layout: {type: 'hbox'}, defaults: {padding: '5px'}, items:[
+                        {xtype: 'combobox', flex: 2, labelAlign:'top', name: 'classificatie', fieldLabel: "Voorgestelde classificatie", displayField:"CLASSIFICATIE", valueField: "CLS_ID", store: this.stores.classificaties},
+                        {xtype:'filefield',flex: 1, labelAlign:'top', fieldLabel: "Upload", buttonOnly:true, buttonText:'Upload shp-zip, pdf, ...', itemId:'shp'}
                     ]
                 },
                 {
@@ -135,9 +140,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
        
         this.cvbutton = Ext.create('Ext.Button', {
             text: 'Correctievoorstel',
-            handler: function () {
-                me.container.show();
-            }
+            handler: this.newCorrection
         });
        
         this.vubutton = Ext.create('Ext.Button', {
@@ -167,5 +170,31 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         var mapContainer = Ext.get(this.config.viewerController.getMapId());
         this.buttonContainer.alignTo(mapContainer, [align, align].join('-'),pos);
         this.config.viewerController.anchorTo(this.buttonContainer, mapContainer, [align, align].join('-'),pos);
+    },
+    createStores: function () {
+        Ext.define('User', {
+            extend: 'Ext.data.Model',
+            fields: ['CLS_ID', 'CLASSIFICATIE']
+        });
+
+        var store = Ext.create('Ext.data.Store', {
+            model: 'User',
+            proxy: {
+                extraParams: {
+                    application: FlamingoAppLoader.get('appId'),
+                    featureTypeName: "CLASSIFICATIES",
+                    fs: 17
+                },
+                type: 'ajax',
+                url: FlamingoAppLoader.get('contextPath') + '/action/mob/store',
+                reader: {
+                    type: 'json',
+                    rootProperty: 'features'
+                }
+            }
+        });
+
+        this.stores.classificaties = store;
+        this.loadWindow();
     }
 });
