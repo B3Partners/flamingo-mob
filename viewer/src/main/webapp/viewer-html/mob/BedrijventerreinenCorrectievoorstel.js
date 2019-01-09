@@ -114,10 +114,13 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     createButtons: function(){
        if(this.buttonContainer === null) {
             this.buttonContainer = Ext.create('Ext.container.Container', {
-                renderTo:   Ext.get(this.config.viewerController.getMapId()),//this.div,
+                renderTo:   Ext.get(this.config.viewerController.getMapId()),
                 floating: true,
                 border: false,
                 shadow: false,
+                defaults:{
+                    margin: '5px'
+                },
                 style: {
                     'zIndex': 1002
                 }
@@ -159,7 +162,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         if(!this.buttonContainer) {
             return;
         }
-        var pos = [Number(-5), Number(5)];
+        var pos = [Number(-20), Number(5)];
         var align = 'tr';
         var mapContainer = Ext.get(this.config.viewerController.getMapId());
         this.buttonContainer.alignTo(mapContainer, [align, align].join('-'),pos);
