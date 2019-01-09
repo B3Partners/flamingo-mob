@@ -9,7 +9,8 @@
 
 Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     extend: "viewer.components.Component",
-    bedrijventerrein: null,
+    container:null,
+    buttonContainer:null,
     stores: {},
     config: {
         title: null,
@@ -43,7 +44,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             label: me.config.label
         });
 
-        this.container = Ext.create('Ext.container.Container', {
+        this.container = Ext.create('Ext.window.Window', {
             layout: {
                 type: 'hbox',
                 align: 'stretch'
@@ -52,7 +53,8 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             items: this.createForm()
 
         });
-        this.getContentContainer().add(this.container);
+        //this.getContentContainer().add(this.container);
+        this.createButtons();
     },
     createForm: function () {
         this.form = Ext.create('Ext.form.Panel', {
@@ -108,5 +110,59 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             ]
         });
         return this.form;
+    },
+    createButtons: function(){
+       if(this.buttonContainer === null) {
+            this.buttonContainer = Ext.create('Ext.container.Container', {
+                renderTo:   Ext.get(this.config.viewerController.getMapId()),//this.div,
+                floating: true,
+                border: false,
+                shadow: false,
+                style: {
+                    'zIndex': 1002
+                }
+            });
+        }
+        if(this.cvbutton) {
+            this.cvbutton.destroy();
+            this.vubutton.destroy();
+            this.indienbutton.destroy();
+        }
+        var me = this;
+       
+        this.cvbutton = Ext.create('Ext.Button', {
+            text: 'Correctievoorstel',
+            handler: function () {
+                me.container.show();
+            }
+        });
+       
+        this.vubutton = Ext.create('Ext.Button', {
+            text: 'Verwachte uitgifte',
+            handler: function () {
+                alert('You clicked the verwachte uitgifte button!');
+            }
+        });
+       
+        this.indienbutton = Ext.create('Ext.Button', {
+            text: 'Indienen',
+            handler: function () {
+                alert('You clicked the indienen button!');
+            }
+        });
+        this.buttonContainer.add(this.cvbutton); 
+        this.buttonContainer.add(this.vubutton); 
+        this.buttonContainer.add(this.indienbutton); 
+        this.alignButtons();
+    },
+    alignButtons: function() {
+        if(!this.buttonContainer) {
+            return;
+        }
+        var pos = [Number(-5), Number(5)];
+        var align = 'tr';
+        var mapContainer = Ext.get(this.config.viewerController.getMapId());
+        this.buttonContainer.alignTo(mapContainer, [align, align].join('-'),pos);
+        this.config.viewerController.anchorTo(this.buttonContainer, mapContainer, [align, align].join('-'),pos);
     }
 });
