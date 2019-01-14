@@ -1,11 +1,21 @@
 /* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2018 B3Partners B.V.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-/* global Ext, FlamingoAppLoader */
+/* global Ext, FlamingoAppLoader, actionBeans */
 
 Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     extend: "viewer.components.Edit",
@@ -111,14 +121,14 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                     xtype: 'container', layout: {type: 'hbox'}, items: [
                         {flex: 1, xtype: 'combobox', labelAlign: 'top', name: 'status', margin: '5px', padding: '5px', fieldLabel: "Status", value: "Opgeslagen", store: this.stores.status},
                         {flex: 2, xtype: 'container', layout: {type: 'hbox', pack: 'end'}, defaults: {margin: '5px', padding: '5px'}, items: [
-                                {xtype: 'datefield', format : 'd-m-Y',altFormats : 'd-m-y|d-M-Y',submitFormat : 'c',name:"MUTATIEDATUM_GEMEENTE", labelAlign: 'top', fieldLabel: 'Laatste wijziging gemeente', value: '2018-10-10', itemId: 'datumLaatstGewijzigdGemeente'},
+                                {xtype: 'datefield', format : 'd-m-Y',altFormats : 'd-m-y|d-M-Y',submitFormat : 'c',name:"MUTATIEDATUM_GEMEENTE", labelAlign: 'top', fieldLabel: 'Laatste wijziging gemeente', value: new Date(), itemId: 'datumLaatstGewijzigdGemeente'},
                                 {xtype: 'textfield', name:"MUT_GEMEENTE_DOOR", labelAlign: 'top', fieldLabel: "Naam", value: 'PJansen', itemId: 'naamLaatstGewijzigdGemeente'}]
                         }
                     ]
                 },
                 {
                     xtype: 'container', layout: {type: 'hbox', pack: 'end'}, defaults: {margin: '5px', padding: '5px'}, items: [
-                        {xtype: 'datefield', labelAlign: 'top', format : 'd-m-Y',altFormats : 'd-m-y|d-M-Y',submitFormat : 'c', name:"MUTATIEDATUM_PROVINCIE", fieldLabel: 'Laatste wijziging provincie', value: '2018-10-11', itemId: 'datumLaatstGewijzigdProvincie'},
+                        {xtype: 'datefield', labelAlign: 'top', format : 'd-m-Y',altFormats : 'd-m-y|d-M-Y',submitFormat : 'c', name:"MUTATIEDATUM_PROVINCIE", fieldLabel: 'Laatste wijziging provincie', value: new Date(), itemId: 'datumLaatstGewijzigdProvincie'},
                         {xtype: 'textfield', labelAlign: 'top', name:"MUT_PROVINCIE_DOOR", fieldLabel: "Naam", value: 'DvabderVeen', itemId: 'naamLaatstGewijzigdProvincie'}
                     ]
                 }
@@ -126,6 +136,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             bbar: [
                 {xtype: 'button', text: 'Opslaan', itemId: 'save-button', scope: this, handler: function () {
                         this.save();
+                        this.vectorLayer.removeAllFeatures();
                     }
                 },
                 {xtype: 'button', text: 'Verwijderen', itemId: 'remove-button', scope: this, handler: function () {
@@ -217,5 +228,11 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         });
 
         this.stores.classificaties = store;
+    },
+    getEditFeature: function(){
+        return Ext.create("viewer.EditFeature", {
+            viewerController: this.config.viewerController,
+            actionbeanUrl: actionBeans["mobeditfeature"]
+        });
     }
 });
