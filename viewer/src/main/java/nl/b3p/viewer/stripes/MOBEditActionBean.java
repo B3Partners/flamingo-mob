@@ -40,11 +40,10 @@ public class MOBEditActionBean extends EditFeatureActionBean{
         // @ToDo authorizations
         // create correctie status
         // set correctie_status_id on jsonfeature
-        EditFeatureActionBean efab = new EditFeatureActionBean();
-        efab.setContext(context);
-        efab.setFeature(feature);
-        Resolution r = efab.edit();
-        r.
+        
+        // CORRECTIESTATUS
+      //  Resolution r = saveRelatedFeatures();
+        
         return edit();
     }
     

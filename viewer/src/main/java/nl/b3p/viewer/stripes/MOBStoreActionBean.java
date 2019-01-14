@@ -19,16 +19,17 @@ package nl.b3p.viewer.stripes;
 import java.io.StringReader;
 import java.util.Collection;
 import java.util.NoSuchElementException;
-import javafx.application.Application;
 import javax.persistence.EntityManager;
-import net.sourceforge.stripes.action.ActionBean;
 import net.sourceforge.stripes.action.ActionBeanContext;
 import net.sourceforge.stripes.action.Resolution;
 import net.sourceforge.stripes.action.StreamingResolution;
 import net.sourceforge.stripes.action.StrictBinding;
 import net.sourceforge.stripes.action.UrlBinding;
 import net.sourceforge.stripes.validation.Validate;
+import nl.b3p.viewer.config.app.Application;
+import nl.b3p.viewer.config.app.ApplicationLayer;
 import nl.b3p.viewer.config.services.FeatureSource;
+import nl.b3p.viewer.config.services.Layer;
 import nl.b3p.viewer.config.services.SimpleFeatureType;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,13 +47,12 @@ import org.stripesstuff.stripersist.Stripersist;
  */
 @UrlBinding("/action/mob/store")
 @StrictBinding
-public class MOBStoreActionBean implements ActionBean {
+public class MOBStoreActionBean extends LocalizableApplicationActionBean {
 
     private static final Log log = LogFactory.getLog(MOBStoreActionBean.class);
 
     private ActionBeanContext context;
 
-    @Validate
     private FeatureSource fs;
 
     @Validate
@@ -60,6 +60,9 @@ public class MOBStoreActionBean implements ActionBean {
 
     @Validate
     private Application application;
+    
+    @Validate
+    private ApplicationLayer appLayer;
 
     // <editor-fold defaultstate="collapsed" desc="getters and setters">
     @Override
@@ -96,6 +99,13 @@ public class MOBStoreActionBean implements ActionBean {
         this.application = application;
     }
 
+    public ApplicationLayer getAppLayer() {
+        return appLayer;
+    }
+
+    public void setAppLayer(ApplicationLayer appLayer) {
+        this.appLayer = appLayer;
+    }
     // </editor-fold>
     public Resolution store() {
         String error;
@@ -108,6 +118,19 @@ public class MOBStoreActionBean implements ActionBean {
             break;
         }*/
 
+        Layer layer = appLayer.getService().getLayer(appLayer.getLayerName(), em);
+
+        if (layer == null) {
+            error = getBundle().getString("viewer.editfeatureactionbean.3");
+            return new StreamingResolution("application/json", new StringReader(error));
+        }
+
+        if (layer.getFeatureType() == null) {
+            error = getBundle().getString("viewer.editfeatureactionbean.4");
+            return new StreamingResolution("application/json", new StringReader(error));
+        }
+
+        fs = layer.getFeatureType().getFeatureSource();
         SimpleFeatureType sft = fs.getFeatureType(featureTypeName);
         try {
             org.geotools.data.FeatureSource source = sft.openGeoToolsFeatureSource();

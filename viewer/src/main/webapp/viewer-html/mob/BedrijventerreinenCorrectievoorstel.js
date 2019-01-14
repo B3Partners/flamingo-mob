@@ -35,9 +35,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.currentAGM_ID = 16;
         this.initConfig(conf);
         viewer.components.BedrijventerreinenCorrectievoorstel.superclass.constructor.call(this, this.config);
-        this.createStores();
-        this.loadWindow();
-        
+ 
         this.vectorLayer = this.config.viewerController.mapComponent.createVectorLayer({
             name: this.config.name + 'VectorLayer',
             geometrytypes:["Polygon"],
@@ -62,6 +60,9 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.layerSelector.getValue = function(){
             return me.appLayer;
         };
+        this.createStores();
+        this.loadWindow();
+        
         return this;
     },
     newCorrection: function () {
@@ -73,8 +74,8 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     
     changeFeatureBeforeSave: function(feat){
         feat.AGM_ID = this.currentAGM_ID;
-        feat.CORRECTIE_STATUS_ID = 1; // via backend vullen: eerst correctiestatus aanmaken, en id hierin stoppen
-        
+     //   feat.CORRECTIE_STATUS_ID = 1; // via backend vullen: eerst correctiestatus aanmaken, en id hierin stoppen
+       // feat.BEGINDATUM = feat.MUTATIEDATUM_GEMEENTE;
         return feat;
     },
 
@@ -90,6 +91,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             items: this.createForm()
 
         });
+   //     this.getContentContainer().add(this.container);
         this.createButtons();
     },
     createForm: function () {
@@ -119,7 +121,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                 },
                 {
                     xtype: 'container', layout: {type: 'hbox'}, items: [
-                        {flex: 1, xtype: 'combobox', labelAlign: 'top', name: 'status', margin: '5px', padding: '5px', fieldLabel: "Status", value: "Opgeslagen", store: this.stores.status},
+                        {flex: 1, xtype: 'combobox', labelAlign: 'top', name: 'CORRECTIE_STATUS_ID', margin: '5px', padding: '5px', fieldLabel: "Status", displayField: "CORRECTIE_STATUS", valueField: "CS_ID",value: "Opgeslagen", store: this.stores.statussen},
                         {flex: 2, xtype: 'container', layout: {type: 'hbox', pack: 'end'}, defaults: {margin: '5px', padding: '5px'}, items: [
                                 {xtype: 'datefield', format : 'd-m-Y',altFormats : 'd-m-y|d-M-Y',submitFormat : 'c',name:"MUTATIEDATUM_GEMEENTE", labelAlign: 'top', fieldLabel: 'Laatste wijziging gemeente', value: new Date(), itemId: 'datumLaatstGewijzigdGemeente'},
                                 {xtype: 'textfield', name:"MUT_GEMEENTE_DOOR", labelAlign: 'top', fieldLabel: "Naam", value: 'PJansen', itemId: 'naamLaatstGewijzigdGemeente'}]
@@ -205,18 +207,22 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.config.viewerController.anchorTo(this.buttonContainer, mapContainer, [align, align].join('-'), pos);
     },
     createStores: function () {
-        Ext.define('User', {
+        Ext.define('Classificatie', {
             extend: 'Ext.data.Model',
             fields: ['CLS_ID', 'CLASSIFICATIE']
         });
+        Ext.define('Correctie_status', {
+            extend: 'Ext.data.Model',
+            fields: ['CS_ID', 'CORRECTIE_STATUS']
+        });
 
-        var store = Ext.create('Ext.data.Store', {
-            model: 'User',
+        var classStore = Ext.create('Ext.data.Store', {
+            model: 'Classificatie',
             proxy: {
                 extraParams: {
                     application: FlamingoAppLoader.get('appId'),
                     featureTypeName: "CLASSIFICATIES",
-                    fs: 17
+                    appLayer: this.layer
                 },
                 type: 'ajax',
                 url: FlamingoAppLoader.get('contextPath') + '/action/mob/store',
@@ -227,7 +233,31 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             }
         });
 
-        this.stores.classificaties = store;
+        var statusStore = Ext.create('Ext.data.Store', {
+            model: 'Correctie_status',
+            proxy: {
+                extraParams: {
+                    application: FlamingoAppLoader.get('appId'),
+                    featureTypeName: "CORRECTIE_STATUSSEN",
+                    appLayer: this.layer
+                },
+                type: 'ajax',
+                url: FlamingoAppLoader.get('contextPath') + '/action/mob/store',
+                reader: {
+                    type: 'json',
+                    rootProperty: 'features'
+                }
+            }
+        });
+
+        this.stores.classificaties = classStore;
+        this.stores.statussen = statusStore;
+        
+        for(var key in this.stores){
+            if(this.stores.hasOwnProperty(key)){
+                this.stores[key].load();
+            }
+        }
     },
     getEditFeature: function(){
         return Ext.create("viewer.EditFeature", {
