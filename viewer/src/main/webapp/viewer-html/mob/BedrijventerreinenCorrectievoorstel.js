@@ -52,7 +52,9 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.config.viewerController.registerSnappingLayer(this.vectorLayer);
         this.config.viewerController.mapComponent.getMap().addLayer(this.vectorLayer);
                 
-        this.vectorLayer.addListener (viewer.viewercontroller.controller.Event.ON_FEATURE_ADDED,function(){this.container.show();},this);
+        this.vectorLayer.addListener (viewer.viewercontroller.controller.Event.ON_FEATURE_ADDED,function(){
+            this.container.show();
+        },this);
         this.geometryEditable = true;
         this.appLayer = this.config.viewerController.getAppLayerById(this.config.layer);
         this.layerSelector = {};
@@ -67,16 +69,13 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     },
     newCorrection: function () {
        this.mode = "new";
-       // this.vectorLayer.drawFeature("Polygon");
-       var feat = Ext.create(viewer.viewercontroller.controller.Feature, {wktgeom : "POLYGON((223790 504638,228844 508832.16,232661.12 504585,229166 502918,223790 504638))"});
-       this.vectorLayer.addFeatures([feat]);
+        this.vectorLayer.drawFeature("Polygon");
+       //var feat = Ext.create(viewer.viewercontroller.controller.Feature, {wktgeom : "POLYGON((223790 504638,228844 508832.16,232661.12 504585,229166 502918,223790 504638))"});
+    //  this.vectorLayer.addFeatures([feat]);
     },
-    
-    changeFeatureBeforeSave: function(feat){
-        feat.AGM_ID = this.currentAGM_ID;
-     //   feat.CORRECTIE_STATUS_ID = 1; // via backend vullen: eerst correctiestatus aanmaken, en id hierin stoppen
-       // feat.BEGINDATUM = feat.MUTATIEDATUM_GEMEENTE;
-        return feat;
+    reset: function(){
+        this.vectorLayer.removeAllFeatures();
+        this.inputContainer.reset();
     },
 
     loadWindow: function () {
@@ -86,12 +85,16 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                 align: 'stretch'
             },
             width: 600,
+            closeAction: "hide",
             height: 600,
             padding: '5px',
-            items: this.createForm()
+            items: this.createForm(),
+            listeners:{
+                scope:this,
+                hide: this.reset
+            }
 
         });
-   //     this.getContentContainer().add(this.container);
         this.createButtons();
     },
     createForm: function () {
@@ -106,46 +109,39 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                 },
                 {
                     xtype: 'container', layout: {type: 'hbox'}, defaults: {margin: '5px', padding: '5px'}, items: [
-                        {xtype: 'textfield', value: 'Almelo', editable: false, itemId: 'gemeente'},
-                        {xtype: 'textfield', value: 'Turfkade', flex: 1, editable: false, itemId: 'plan'}
+                        {xtype: 'textfield', value: '', editable: false, itemId: 'gemeente'},
+                        {xtype: 'textfield', value: '', flex: 1, editable: false, itemId: 'plan'}
                     ]
                 },
                 {
                     xtype: 'container', layout: {type: 'hbox'}, defaults: {padding: '5px'}, items: [
-                        {xtype: 'combobox', flex: 2, labelAlign: 'top', value:2, name: 'CLASSIFICATIE_ID', fieldLabel: "Voorgestelde classificatie", displayField: "CLASSIFICATIE", valueField: "CLS_ID", store: this.stores.classificaties},
-                        {xtype: 'filefield', flex: 1, labelAlign: 'top', fieldLabel: "Upload", buttonOnly: true, buttonText: 'Upload shp-zip, pdf, ...', itemId: 'shp'}
+                        {xtype: 'combobox', flex: 2, labelAlign: 'top', name: 'CLASSIFICATIE_ID', fieldLabel: "Voorgestelde classificatie", displayField: "CLASSIFICATIE", valueField: "CLS_ID", store: this.stores.classificaties},
+                        {xtype: 'filefield', flex: 1, disabled:true, labelAlign: 'top', fieldLabel: "Upload", buttonOnly: true, buttonText: 'Upload shp-zip, pdf, ...', itemId: 'shp'}
                     ]
                 },
                 {
-                    xtype: "textarea", name:"TOELICHTING", value:"asdfasdf", fieldLabel: "Toelichting", padding: '5px', labelAlign: 'top', itemId: "toelichting", anchor: '100%'
+                    xtype: "textarea", name:"TOELICHTING", fieldLabel: "Toelichting", padding: '5px', labelAlign: 'top', itemId: "toelichting", anchor: '100%'
                 },
                 {
                     xtype: 'container', layout: {type: 'hbox'}, items: [
-                        {flex: 1, xtype: 'combobox', labelAlign: 'top', name: 'CORRECTIE_STATUS_ID', margin: '5px', padding: '5px', fieldLabel: "Status", displayField: "CORRECTIE_STATUS", valueField: "CS_ID",value: "Opgeslagen", store: this.stores.statussen},
+                        {flex: 1, xtype: 'combobox', labelAlign: 'top', name: 'CORRECTIE_STATUS_ID', margin: '5px', padding: '5px', fieldLabel: "Status", displayField: "CORRECTIE_STATUS", valueField: "CS_ID",store: this.stores.statussen},
                         {flex: 2, xtype: 'container', layout: {type: 'hbox', pack: 'end'}, defaults: {margin: '5px', padding: '5px'}, items: [
                                 {xtype: 'datefield', format : 'd-m-Y',altFormats : 'd-m-y|d-M-Y',submitFormat : 'c',name:"MUTATIEDATUM_GEMEENTE", labelAlign: 'top', fieldLabel: 'Laatste wijziging gemeente', value: new Date(), itemId: 'datumLaatstGewijzigdGemeente'},
-                                {xtype: 'textfield', name:"MUT_GEMEENTE_DOOR", labelAlign: 'top', fieldLabel: "Naam", value: 'PJansen', itemId: 'naamLaatstGewijzigdGemeente'}]
+                                {xtype: 'textfield', name:"MUT_GEMEENTE_DOOR", labelAlign: 'top', fieldLabel: "Naam", itemId: 'naamLaatstGewijzigdGemeente'}]
                         }
                     ]
                 },
                 {
                     xtype: 'container', layout: {type: 'hbox', pack: 'end'}, defaults: {margin: '5px', padding: '5px'}, items: [
                         {xtype: 'datefield', labelAlign: 'top', format : 'd-m-Y',altFormats : 'd-m-y|d-M-Y',submitFormat : 'c', name:"MUTATIEDATUM_PROVINCIE", fieldLabel: 'Laatste wijziging provincie', value: new Date(), itemId: 'datumLaatstGewijzigdProvincie'},
-                        {xtype: 'textfield', labelAlign: 'top', name:"MUT_PROVINCIE_DOOR", fieldLabel: "Naam", value: 'DvabderVeen', itemId: 'naamLaatstGewijzigdProvincie'}
+                        {xtype: 'textfield', labelAlign: 'top', name:"MUT_PROVINCIE_DOOR", fieldLabel: "Naam", itemId: 'naamLaatstGewijzigdProvincie'}
                     ]
                 }
             ],
             bbar: [
-                {xtype: 'button', text: 'Opslaan', itemId: 'save-button', scope: this, handler: function () {
-                        this.save();
-                        this.vectorLayer.removeAllFeatures();
-                    }
-                },
-                {xtype: 'button', text: 'Verwijderen', itemId: 'remove-button', scope: this, handler: function () {
-                        this.remove();
-                    }
-                },
-                {xtype: 'button', text: 'Annuleren'}
+                {xtype: 'button', text: 'Opslaan', itemId: 'save-button', scope: this, handler: function () {this.save();}},
+                {xtype: 'button', text: 'Verwijderen', itemId: 'remove-button', scope: this, handler: function () {this.remove();}},
+                {xtype: 'button', text: 'Annuleren',scope: this, handler: function () {this.reset();}}
             ]
         });
         return this.inputContainer;
@@ -206,6 +202,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.buttonContainer.alignTo(mapContainer, [align, align].join('-'), pos);
         this.config.viewerController.anchorTo(this.buttonContainer, mapContainer, [align, align].join('-'), pos);
     },
+    
     createStores: function () {
         Ext.define('Classificatie', {
             extend: 'Ext.data.Model',
@@ -259,10 +256,19 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             }
         }
     },
+    
+    changeFeatureBeforeSave: function(feat){
+        feat.AGM_ID = this.currentAGM_ID;
+        return feat;
+    },
     getEditFeature: function(){
         return Ext.create("viewer.EditFeature", {
             viewerController: this.config.viewerController,
             actionbeanUrl: actionBeans["mobeditfeature"]
         });
+    },
+    saveSucces: function(){
+        this.reset();
+        viewer.components.BedrijventerreinenCorrectievoorstel.superclass.saveSucces.call(this, this.config);
     }
 });
