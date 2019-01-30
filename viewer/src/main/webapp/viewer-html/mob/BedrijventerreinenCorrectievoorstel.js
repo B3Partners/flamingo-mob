@@ -110,8 +110,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                 },
                 {
                     xtype: 'container', layout: {type: 'hbox'}, defaults: {margin: '5px', padding: '5px'}, items: [
-                        {xtype: 'textfield', value: '', editable: true, itemId: 'gemeente'},
-                        {xtype: 'textfield', value: '', flex: 1, editable: true, itemId: 'plan'}
+                        {xtype: 'textfield', value: '', editable: true, itemId: 'gemeente'}
                     ]
                 },
                 {
