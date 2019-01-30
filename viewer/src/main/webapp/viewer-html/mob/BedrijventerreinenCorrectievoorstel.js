@@ -104,13 +104,14 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             items: [
                 {
                     xtype: 'container', layout: {type: 'hbox', pack: "end"}, items: [
+                        {xtype: 'label', text: 'Peildatum ', itemId: 'peildatumlabel'},
                         {xtype: 'label', text: '1 juli 2018', itemId: 'peildatum'}
                     ]
                 },
                 {
                     xtype: 'container', layout: {type: 'hbox'}, defaults: {margin: '5px', padding: '5px'}, items: [
-                        {xtype: 'textfield', value: '', editable: false, itemId: 'gemeente'},
-                        {xtype: 'textfield', value: '', flex: 1, editable: false, itemId: 'plan'}
+                        {xtype: 'textfield', value: '', editable: true, itemId: 'gemeente'},
+                        {xtype: 'textfield', value: '', flex: 1, editable: true, itemId: 'plan'}
                     ]
                 },
                 {
