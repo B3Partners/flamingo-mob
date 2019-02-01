@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.NoSuchElementException;
 import javax.persistence.EntityManager;
 import net.sourceforge.stripes.action.ActionBeanContext;
+import net.sourceforge.stripes.action.DefaultHandler;
 import net.sourceforge.stripes.action.Resolution;
 import net.sourceforge.stripes.action.StreamingResolution;
 import net.sourceforge.stripes.action.StrictBinding;
@@ -33,12 +34,16 @@ import nl.b3p.viewer.config.services.Layer;
 import nl.b3p.viewer.config.services.SimpleFeatureType;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.geotools.factory.CommonFactoryFinder;
+import org.geotools.factory.GeoTools;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opengis.feature.Property;
 import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.filter.Filter;
+import org.opengis.filter.FilterFactory2;
 import org.stripesstuff.stripersist.Stripersist;
 
 /**
@@ -63,7 +68,14 @@ public class MOBStoreActionBean extends LocalizableApplicationActionBean {
     
     @Validate
     private ApplicationLayer appLayer;
-
+    
+    @Validate(on="metingen")
+    private String GEM_CODE_CBS;
+    
+    
+    @Validate(on="metingen")
+    private Integer MTG_ID;
+    
     // <editor-fold defaultstate="collapsed" desc="getters and setters">
     @Override
     public ActionBeanContext getContext() {
@@ -106,7 +118,25 @@ public class MOBStoreActionBean extends LocalizableApplicationActionBean {
     public void setAppLayer(ApplicationLayer appLayer) {
         this.appLayer = appLayer;
     }
+
+    public String getGEM_CODE_CBS() {
+        return GEM_CODE_CBS;
+    }
+
+    public void setGEM_CODE_CBS(String GEM_CODE_CBS) {
+        this.GEM_CODE_CBS = GEM_CODE_CBS;
+    }
+
+    public Integer getMTG_ID() {
+        return MTG_ID;
+    }
+
+    public void setMTG_ID(Integer MTG_ID) {
+        this.MTG_ID = MTG_ID;
+    }
     // </editor-fold>
+    
+    @DefaultHandler
     public Resolution store() {
         String error;
 
@@ -135,6 +165,64 @@ public class MOBStoreActionBean extends LocalizableApplicationActionBean {
         try {
             org.geotools.data.FeatureSource source = sft.openGeoToolsFeatureSource();
             FeatureCollection fc = source.getFeatures();
+            FeatureIterator<SimpleFeature> it = null;
+            JSONArray features = new JSONArray();
+            response.put("features", features);
+            try {
+                it = fc.features();
+                int featureIndex = 0;
+                while (it.hasNext()) {
+                    SimpleFeature f = it.next();
+                    features.put(featureToJSON(f));
+
+                }
+            } catch (NoSuchElementException e) {
+                log.error("Cannot get feature:", e);
+            } finally {
+                if (it != null) {
+                    it.close();
+                }
+                source.getDataStore().dispose();
+            }
+        } catch (Exception ex) {
+            log.error("Cannot open featuresource:", ex);
+        }
+
+        return new StreamingResolution("application/json", new StringReader(response.toString(4)));
+    }
+    
+    public Resolution metingen(){
+        String error;
+
+        JSONObject response = new JSONObject();
+        EntityManager em = Stripersist.getEntityManager();
+        /*  @ToDo: do some authorizations
+        if (!Authorizations.isAppLayerReadAuthorized(application, al, context.getRequest(), em)) {
+            error = "Not authorized";
+            break;
+        }*/
+
+        Layer layer = appLayer.getService().getLayer(appLayer.getLayerName(), em);
+
+        if (layer == null) {
+            error = getBundle().getString("viewer.editfeatureactionbean.3");
+            return new StreamingResolution("application/json", new StringReader(error));
+        }
+
+        if (layer.getFeatureType() == null) {
+            error = getBundle().getString("viewer.editfeatureactionbean.4");
+            return new StreamingResolution("application/json", new StringReader(error));
+        }
+
+        fs = layer.getFeatureType().getFeatureSource();
+        SimpleFeatureType sft = fs.getFeatureType("BEDR_TERREIN_METINGEN");
+
+        FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2(GeoTools.getDefaultHints());
+        Filter and = ff.and(ff.equal(ff.property("MTG_ID"), ff.literal(MTG_ID)), ff.equal(ff.property("GEM_CODE_CBS"), ff.literal(GEM_CODE_CBS)));
+        
+        try {
+            org.geotools.data.FeatureSource source = sft.openGeoToolsFeatureSource();
+            FeatureCollection fc = source.getFeatures(and);
             FeatureIterator<SimpleFeature> it = null;
             JSONArray features = new JSONArray();
             response.put("features", features);
