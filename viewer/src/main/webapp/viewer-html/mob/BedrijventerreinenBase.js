@@ -51,5 +51,53 @@ Ext.define ("viewer.components.BedrijventerreinenBase", {
                 { name: 'EINDDATUM', type: 'date' }
             ]
         });
+        Ext.define('Bedrijventerreinen.model.BedrijventerreinenMetingen', {
+            extend: 'Ext.data.Model',
+            fields: [
+                { name: 'BTM_ID', type: 'int' },
+                { name: 'RIN_NUMMER', type: 'int' },
+                { name: 'METING_ID', type: 'int' },
+                { name: 'GEOMETRIE', type: 'string' },
+                { name: 'GEM_CODE_CBS', type: 'int' },
+                { name: 'WERKLOCATIE_TYPE_CODE', type: 'string' },
+                { name: 'AFGESPR_AANBOD_OPP', type: 'number' },
+                { name: 'AFGESPR_NETTO_OPP', type: 'number' },
+                { name: 'AFSPRAAK_REDEN', type: 'string' },
+                { name: 'UITGEEFBAAR_PART_OPP', type: 'number' },
+                { name: 'UITGEEFBAAR_OVERH_OPP', type: 'number' },
+                { name: 'UITGEGEVEN_OPP', type: 'number' },
+                { name: 'OPP_TERUGKOOP_GEMEENTE', type: 'number' },
+                { name: 'PLAN_FASE_CODE', type: 'string' },
+                { name: 'OPMERKING_TBV_IBIS', type: 'string' },
+                { name: 'IND_VOL', type: 'string' },
+                { name: 'JAAR_NIET_TERSTOND_UITG_GEM', type: 'string' },
+                { name: 'MIN_VERKOOPPRIJS', type: 'number' },
+                { name: 'MAX_VERKOOPPRIJS', type: 'number' },
+                { name: 'MIN_ERFPACHTPRIJS', type: 'number' },
+                { name: 'MAX_ERFPACHTPRIJS', type: 'number' },
+                { name: 'IND_MILIEUZONERING', type: 'string' },
+                { name: 'SPOOR_ONTSLUITING_CODE', type: 'string' },
+                { name: 'WATER_ONTSLUITING_CODE', type: 'string' },
+                { name: 'MAX_MILEUCATEGORIE_CODE', type: 'string' },
+                { name: 'IND_VEROUDERD', type: 'string' },
+                { name: 'HOOFDOORZAAK_VEROUD_CODE', type: 'string' },
+                { name: 'BRUTO_OPP_VEROUDERD', type: 'number' },
+                { name: 'HERSTRUCT_PLAN_TYPE_CODE', type: 'string' },
+                { name: 'HERSTRUCT_FASE_CODE', type: 'string' },
+                { name: 'OPP_FACELIFT', type: 'number' },
+                { name: 'OPP_REVITALISATIE', type: 'number' },
+                { name: 'OPP_ZWARE_REVITALISATIE', type: 'number' },
+                { name: 'OPP_HERPROFILERING', type: 'number' },
+                { name: 'OPP_TRANSFORMATIE', type: 'number' },
+                { name: 'EXT_BEREIKBAARHEID_CODE', type: 'string' },
+                { name: 'PARKEERGELEGENHED_CODE', type: 'string' },
+                { name: 'IND_PARK_MANAGEMENT', type: 'string' },
+                { name: 'MUTATIEDATUM_GEMEENTE', type: 'date' },
+                { name: 'MUT_GEMEENTE_DOOR', type: 'string' },
+                { name: 'MUTATIEDATUM_PROVINCIE', type: 'date' },
+                { name: 'MUT_PROVINCIE_DOOR', type: 'string' },
+                { name: 'SE_ANNO_CAD_DATA', type: 'string' }
+            ]
+        });
     }
 });

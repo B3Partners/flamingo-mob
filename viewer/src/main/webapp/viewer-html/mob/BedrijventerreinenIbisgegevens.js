@@ -22,6 +22,8 @@ var BEDRIJVENTERREINEN_DUMMY_DATA = [ { "gemeente": "HARDENBERG", "bedrijventerr
 Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     extend: "viewer.components.Component",
     bedrijventerrein: null,
+    gemeente: null,
+    peildatum: null,
     stores: {},
     config:{
         title: null,
@@ -293,8 +295,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     listeners: {
                         scope: this,
                         change: function(combo, value) {
-                            this.stores.bedrijventerreinen.clearFilter();
-                            this.stores.bedrijventerreinen.filter('gemeente', value);
+                            this.filterBedrijventerreinen(value, null);
                         }
                     }
                 },
@@ -304,14 +305,20 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     fieldLabel: 'Peildatum',
                     valueField: 'MTG_ID',
                     displayField: 'PEILDATUM_LABEL',
-                    store: this.stores.peildatums
+                    store: this.stores.peildatums,
+                    listeners: {
+                        scope: this,
+                        change: function(combo, value) {
+                            this.filterBedrijventerreinen(null, value);
+                        }
+                    }
                 },
                 {
                     xtype: 'gridpanel',
                     flex: 1,
                     store: this.stores.bedrijventerreinen,
                     columns: [
-                        { text: 'Bedrijventerrein', dataIndex: 'bedrijventerrein', flex: 1 }
+                        { text: 'Bedrijventerrein', dataIndex: 'RIN_NUMMER', flex: 1 }
                     ],
                     header: false,
                     hideHeaders: true,
@@ -325,6 +332,15 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             ]
         });
         return container;
+    },
+    filterBedrijventerreinen: function(gemeente, peildatum) {
+        if (gemeente) this.gemeente = gemeente;
+        if (peildatum) this.peildatum = peildatum;
+        if (this.gemeente !== null && this.peildatum !== null) {
+            this.stores.bedrijventerreinen.getProxy().setExtraParam('GEM_CODE_CBS', this.gemeente);
+            this.stores.bedrijventerreinen.getProxy().setExtraParam('METING_ID', this.peildatum);
+            this.stores.bedrijventerreinen.load();
+        }
     },
     createColumnForm: function() {
         var items = Array.prototype.slice.call(arguments);
@@ -361,11 +377,11 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         for(var i = 0; i < BEDRIJVENTERREINEN_DUMMY_DATA.length; i++) if (!gemeentes.hasOwnProperty(BEDRIJVENTERREINEN_DUMMY_DATA[i].gemeente)) gemeentes[BEDRIJVENTERREINEN_DUMMY_DATA[i].gemeente] = true;
         var gemeenteStore = this.createDefaultMobAjaxStore('Bedrijventerreinen.model.Gemeenten', "GEMEENTEN");
         var peildatumsStore = this.createDefaultMobAjaxStore('Bedrijventerreinen.model.Metingen', "METINGEN");
-        var bedrijventerreinenStore = Ext.create('Ext.data.Store', {
-            data: BEDRIJVENTERREINEN_DUMMY_DATA,
-            queryMode: 'local',
-            fields: [ 'gemeente', 'bedrijventerrein' ]
-        });
+        var bedrijventerreinenStore = this.createDefaultMobAjaxStore(
+            'Bedrijventerreinen.model.BedrijventerreinenMetingen',
+            'metingen',
+            'metingen'
+        );
         var prijzenStore = Ext.create('Ext.data.Store', {
             fields: [ 'label', 'min', 'max' ],
             data: [
@@ -422,7 +438,13 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             uitgeefbaar: uitgeefbaarStore
         };
     },
-    createDefaultMobAjaxStore: function(model, type) {
+    createDefaultMobAjaxStore: function(model, type, event) {
+        var extraParams = {
+            application: FlamingoAppLoader.get('appId'),
+            featureTypeName: type,
+            appLayer: this.layer
+        };
+        extraParams[event || 'store'] = true;
         return Ext.create('Ext.data.Store', {
             proxy: {
                 type: 'ajax',
@@ -431,11 +453,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     type: 'json',
                     rootProperty: 'features'
                 },
-                extraParams: {
-                    application: FlamingoAppLoader.get('appId'),
-                    featureTypeName: type,
-                    appLayer: this.layer
-                }
+                extraParams: extraParams
             },
             model: model
         })

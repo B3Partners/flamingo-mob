@@ -70,11 +70,11 @@ public class MOBStoreActionBean extends LocalizableApplicationActionBean {
     private ApplicationLayer appLayer;
     
     @Validate(on="metingen")
-    private String GEM_CODE_CBS;
+    private Integer GEM_CODE_CBS;
     
     
     @Validate(on="metingen")
-    private Integer MTG_ID;
+    private Integer METING_ID;
     
     // <editor-fold defaultstate="collapsed" desc="getters and setters">
     @Override
@@ -119,20 +119,20 @@ public class MOBStoreActionBean extends LocalizableApplicationActionBean {
         this.appLayer = appLayer;
     }
 
-    public String getGEM_CODE_CBS() {
+    public Integer getGEM_CODE_CBS() {
         return GEM_CODE_CBS;
     }
 
-    public void setGEM_CODE_CBS(String GEM_CODE_CBS) {
+    public void setGEM_CODE_CBS(Integer GEM_CODE_CBS) {
         this.GEM_CODE_CBS = GEM_CODE_CBS;
     }
 
-    public Integer getMTG_ID() {
-        return MTG_ID;
+    public Integer getMETING_ID() {
+        return METING_ID;
     }
 
-    public void setMTG_ID(Integer MTG_ID) {
-        this.MTG_ID = MTG_ID;
+    public void setMETING_ID(Integer METING_ID) {
+        this.METING_ID = METING_ID;
     }
     // </editor-fold>
     
@@ -218,7 +218,7 @@ public class MOBStoreActionBean extends LocalizableApplicationActionBean {
         SimpleFeatureType sft = fs.getFeatureType("BEDR_TERREIN_METINGEN");
 
         FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2(GeoTools.getDefaultHints());
-        Filter and = ff.and(ff.equal(ff.property("MTG_ID"), ff.literal(MTG_ID)), ff.equal(ff.property("GEM_CODE_CBS"), ff.literal(GEM_CODE_CBS)));
+        Filter and = ff.and(ff.equal(ff.property("METING_ID"), ff.literal(METING_ID)), ff.equal(ff.property("GEM_CODE_CBS"), ff.literal(GEM_CODE_CBS)));
         
         try {
             org.geotools.data.FeatureSource source = sft.openGeoToolsFeatureSource();
