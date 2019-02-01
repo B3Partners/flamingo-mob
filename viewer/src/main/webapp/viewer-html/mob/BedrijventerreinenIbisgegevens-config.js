@@ -21,19 +21,59 @@
 Ext.define("viewer.components.CustomConfiguration", {
     extend: "viewer.components.SelectionWindowConfig",
     constructor: function (parentId, configObject, configPage) {
-        if (configObject === null){
+        if (configObject === null) {
             configObject = {};
         }
         configObject.showLabelconfig = true;
         viewer.components.CustomConfiguration.superclass.constructor.call(this, parentId, configObject, configPage);
+        this.getLayerList();
     },
-    getDefaultValues: function() {
+    createConfigForm: function () {
+        var me = this;
+        this.form.add([
+            {
+                fieldLabel: "Ibisgegevens laag",
+                labelWidth: this.labelWidth,
+                name: "layer",
+                id: "layer",
+                xtype: "combo",
+                emptyText: 'Maak uw keuze',
+                store: me.layers,
+                queryMode: 'local',
+                displayField: 'alias',
+                valueField: 'id',
+                width: "100%",
+                value: this.configObject.layer || null
+            }]);
+    },
+    getDefaultValues: function () {
         return {
             details: {
                 minWidth: 450,
                 minHeight: 250
             }
         };
+    },
+    getLayerList: function () {
+        var me = this;
+        me.layers = null;
+        Ext.Ajax.request({
+            url: this.getContextpath() + "/action/componentConfigList",
+            scope:this,
+            params: {
+                appId: this.getApplicationId(),
+                attribute: true,
+                layerlist: true
+            },
+            success: function (result, request) {
+                var layers = Ext.JSON.decode(result.responseText);
+                me.layers = Ext.create('Ext.data.Store', {fields: ['id', 'alias'], data: layers});
+                me.createConfigForm();
+            },
+            failure: function () {
+                Ext.MessageBox.alert("Foutmelding", "Er is een onbekende fout opgetreden waardoor de lijst met kaartlagen niet kan worden weergegeven");
+            }
+        });
     }
 });
 

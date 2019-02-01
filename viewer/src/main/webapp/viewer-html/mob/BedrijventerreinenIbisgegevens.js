@@ -28,6 +28,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         titlebarIcon: null,
         tooltip: null,
         label: "",
+        layer: null,
         details: {
             minWidth: 700,
             minHeight: 400,
@@ -38,6 +39,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         if(!Ext.isDefined(conf.showLabels)) conf.showLabels = true; 
         this.initConfig(conf);
         viewer.components.BedrijventerreinenIbisgegevens.superclass.constructor.call(this, this.config);
+        viewer.components.BedrijventerreinenBase.defineModels();
         this.createStores();
         this.loadWindow();
         return this;
@@ -146,10 +148,10 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 { fieldLabel: "Kernnaam", name: 'kernnaam', value: this.bedrijventerrein ? this.bedrijventerrein.gemeente : "" },
                 { xtype: 'combobox', name: 'planfase', fieldLabel: "Planfase", value: "Vastgesteld", store: this.stores.planfase },
                 { xtype: 'combobox', name: 'terreinbeheerder', fieldLabel: "Terreinbeheerder", value: this.bedrijventerrein ? this.bedrijventerrein.gemeente : "",
-                    store: this.stores.terreinbeheerder, displayField: 'gemeente', valueField: 'gemeente' },
+                    store: this.stores.terreinbeheerder, displayField: 'GEMEENTE_NAAM', valueField: 'GEM_CODE_CBS' },
                 this.createColumnForm(
                     { xtype: 'combobox', name: 'werklocatietype', fieldLabel: "Werklocatietype", value: this.bedrijventerrein ? this.bedrijventerrein.gemeente : "",
-                        store: this.stores.werklocatietype, displayField: 'gemeente', valueField: 'gemeente' },
+                        store: this.stores.werklocatietype, displayField: 'GEMEENTE_NAAM', valueField: 'GEM_CODE_CBS' },
                     { xtype: 'combobox', name: 'park_management', fieldLabel: "Park management", value: "Ja", store: this.stores.parkmanagement, grow: true }
                 ),
                 this.createColumnForm(
@@ -286,8 +288,8 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     labelAlign: 'top',
                     fieldLabel: 'Gemeente',
                     store: this.stores.gemeentes,
-                    displayField: 'gemeente',
-                    valueField: 'gemeente',
+                    displayField: 'GEMEENTE_NAAM',
+                    valueField: 'GEM_CODE_CBS',
                     listeners: {
                         scope: this,
                         change: function(combo, value) {
@@ -300,7 +302,9 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     xtype: 'combobox',
                     labelAlign: 'top',
                     fieldLabel: 'Peildatum',
-                    store: [ "1 januari 2017",  "1 juli 2017",  "1 januari 2018",  "1 juli 2018",  "1 januari 2019",  "1 juli 2019",  "1 januari 2020",  "1 juli 2020" ]
+                    valueField: 'MTG_ID',
+                    displayField: 'PEILDATUM_LABEL',
+                    store: this.stores.peildatums
                 },
                 {
                     xtype: 'gridpanel',
@@ -346,13 +350,17 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     createLabel: function(str) {
         return { xtype: 'container', html: str };
     },
+    defineModels: function() {
+        Ext.define('Classificatie', {
+            extend: 'Ext.data.Model',
+            fields: ['CLS_ID', 'CLASSIFICATIE']
+        });
+    },
     createStores: function() {
         var gemeentes = {};
         for(var i = 0; i < BEDRIJVENTERREINEN_DUMMY_DATA.length; i++) if (!gemeentes.hasOwnProperty(BEDRIJVENTERREINEN_DUMMY_DATA[i].gemeente)) gemeentes[BEDRIJVENTERREINEN_DUMMY_DATA[i].gemeente] = true;
-        var gemeenteStore = Ext.create('Ext.data.Store', {
-            data: Ext.Array.map(Object.keys(gemeentes).sort(), function(gemeente) { return { gemeente: gemeente }; }),
-            queryMode: 'local'
-        });
+        var gemeenteStore = this.createDefaultMobAjaxStore('Bedrijventerreinen.model.Gemeenten', "GEMEENTEN");
+        var peildatumsStore = this.createDefaultMobAjaxStore('Bedrijventerreinen.model.Metingen', "METINGEN");
         var bedrijventerreinenStore = Ext.create('Ext.data.Store', {
             data: BEDRIJVENTERREINEN_DUMMY_DATA,
             queryMode: 'local',
@@ -392,6 +400,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         });
         this.stores = {
             gemeentes: gemeenteStore,
+            peildatums: peildatumsStore,
             bedrijventerreinen: bedrijventerreinenStore,
             planfase: ["Vastgesteld"],
             terreinbeheerder:  gemeenteStore,
@@ -412,6 +421,24 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             oppervlak: oppervlakStore,
             uitgeefbaar: uitgeefbaarStore
         };
+    },
+    createDefaultMobAjaxStore: function(model, type) {
+        return Ext.create('Ext.data.Store', {
+            proxy: {
+                type: 'ajax',
+                url: actionBeans["mobstore"],
+                reader: {
+                    type: 'json',
+                    rootProperty: 'features'
+                },
+                extraParams: {
+                    application: FlamingoAppLoader.get('appId'),
+                    featureTypeName: type,
+                    appLayer: this.layer
+                }
+            },
+            model: model
+        })
     },
     getExtComponents: function() {
         return [ this.container.getId() ];

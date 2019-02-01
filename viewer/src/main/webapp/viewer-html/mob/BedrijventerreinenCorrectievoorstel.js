@@ -36,6 +36,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.initConfig(conf);
         viewer.components.BedrijventerreinenCorrectievoorstel.superclass.constructor.call(this, this.config);
 
+        viewer.components.BedrijventerreinenBase.defineModels();
         this.vectorLayer = this.config.viewerController.mapComponent.createVectorLayer({
             name: this.config.name + 'VectorLayer',
             geometrytypes: ["Polygon"],
@@ -257,17 +258,8 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     },
 
     createStores: function () {
-        Ext.define('Classificatie', {
-            extend: 'Ext.data.Model',
-            fields: ['CLS_ID', 'CLASSIFICATIE']
-        });
-        Ext.define('Correctie_status', {
-            extend: 'Ext.data.Model',
-            fields: ['CS_ID', 'CORRECTIE_STATUS']
-        });
-
         var classStore = Ext.create('Ext.data.Store', {
-            model: 'Classificatie',
+            model: 'Bedrijventerreinen.model.Classificatie',
             proxy: {
                 extraParams: {
                     application: FlamingoAppLoader.get('appId'),
@@ -284,7 +276,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         });
 
         var statusStore = Ext.create('Ext.data.Store', {
-            model: 'Correctie_status',
+            model: 'Bedrijventerreinen.model.Correctie_status',
             proxy: {
                 extraParams: {
                     application: FlamingoAppLoader.get('appId'),
