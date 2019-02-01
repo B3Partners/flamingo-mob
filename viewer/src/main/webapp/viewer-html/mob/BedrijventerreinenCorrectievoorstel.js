@@ -148,7 +148,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             items: [
                 {
                     xtype: 'container', layout: {type: 'hbox', pack: "end"}, items: [
-                        {xtype: 'label', text: 'Peildatum ', itemId: 'peildatumlabel'},
+                        {xtype: 'label', text: 'Peildatum: ', itemId: 'peildatumlabel'},
                         {xtype: 'label', text: '1 juli 2018', itemId: 'peildatum'}
                     ]
                 },
@@ -194,11 +194,10 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                     }}
             ]
         });
-        this.savebutton =this.inputContainer.query("#save-button")[0];
-        this.geomlabel = {
-            setHtml:function(){}
-        };
         return this.inputContainer;
+    },
+    resetForm: function(){
+        this.container.hide();
     },
     createButtons: function () {
         if (this.buttonContainer === null) {
