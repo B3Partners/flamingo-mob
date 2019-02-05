@@ -56,6 +56,8 @@ Ext.define ("viewer.components.BedrijventerreinenBase", {
             fields: [
                 { name: 'BTM_ID', type: 'int' },
                 { name: 'RIN_NUMMER', type: 'int' },
+                { name: 'BEDRIJVENTERREIN' },
+                { name: 'BEDRIJVENTERREIN_LABEL', type: 'string' },
                 { name: 'METING_ID', type: 'int' },
                 { name: 'GEOMETRIE', type: 'string' },
                 { name: 'GEM_CODE_CBS', type: 'int' },
@@ -97,6 +99,105 @@ Ext.define ("viewer.components.BedrijventerreinenBase", {
                 { name: 'MUTATIEDATUM_PROVINCIE', type: 'date' },
                 { name: 'MUT_PROVINCIE_DOOR', type: 'string' },
                 { name: 'SE_ANNO_CAD_DATA', type: 'string' }
+            ]
+        });
+        Ext.define('Bedrijventerreinen.model.Bedrijventerreinen', {
+            extend: 'Ext.data.Model',
+            fields: [
+                {name: 'RIN_NUMMER', type: 'int'},
+                {name: 'KERN_NAAM', type: 'string'},
+                {name: 'PLAN_NAAM', type: 'string'},
+                {name: 'START_JAAR', type: 'int'}
+            ]
+        });
+        Ext.define('Bedrijventerreinen.model.PlanFasen', {
+            extend: 'Ext.data.Model',
+            fields: [
+                {name: 'CODE', type: 'string'},
+                {name: 'PLAN_FASE_NAAM', type: 'string'},
+                {name: 'BEGINDATUM', type: 'date'},
+                {name: 'EINDDATUM', type: 'date'}
+            ]
+        });
+        Ext.define('Bedrijventerreinen.model.Milieucategorieen', {
+            extend: 'Ext.data.Model',
+            fields: [
+                {name: 'CODE', type: 'string'},
+                {name: 'MILIECATEGORIE_NAAM', type: 'string'},
+                {name: 'BEGINDATUM', type: 'date'},
+                {name: 'EINDDATUM', type: 'date'}
+            ]
+        });
+        Ext.define('Bedrijventerreinen.model.WerklocatieTypen', {
+            extend: 'Ext.data.Model',
+            fields: [
+                {name: 'CODE', type: 'string'},
+                {name: 'WERKLOCATIE_TYPE_OMSCHR', type: 'string'},
+                {name: 'BEGINDATUM', type: 'date'},
+                {name: 'EINDDATUM', type: 'date'}
+            ]
+        });
+        Ext.define('Bedrijventerreinen.model.SpoorOntsluitingTypen', {
+            extend: 'Ext.data.Model',
+            fields: [
+                {name: 'CODE', type: 'string'},
+                {name: 'SPOOR_ONTSLUITING_NAAM', type: 'string'},
+                {name: 'BEGINDATUM', type: 'date'},
+                {name: 'EINDDATUM', type: 'date'}
+            ]
+        });
+        Ext.define('Bedrijventerreinen.model.WaterOntsluitingTypen', {
+            extend: 'Ext.data.Model',
+            fields: [
+                {name: 'CODE', type: 'string'},
+                {name: 'WATER_ONTSLUITING_NAAM', type: 'string'},
+                {name: 'BEGINDATUM', type: 'date'},
+                {name: 'EINDDATUM', type: 'date'}
+            ]
+        });
+        Ext.define('Bedrijventerreinen.model.ExtBereikbaarTypen', {
+            extend: 'Ext.data.Model',
+            fields: [
+                {name: 'CODE', type: 'string'},
+                {name: 'EXT_BEREIKBAARHEID_NAAM', type: 'string'},
+                {name: 'BEGINDATUM', type: 'date'},
+                {name: 'EINDDATUM', type: 'date'}
+            ]
+        });
+        Ext.define('Bedrijventerreinen.model.ParkeergelegenheidTypen', {
+            extend: 'Ext.data.Model',
+            fields: [
+                {name: 'CODE', type: 'string'},
+                {name: 'PARKEERGELEGENHEID_NAAM', type: 'string'},
+                {name: 'BEGINDATUM', type: 'date'},
+                {name: 'EINDDATUM', type: 'date'}
+            ]
+        });
+        Ext.define('Bedrijventerreinen.model.HerstructPlanTypen', {
+            extend: 'Ext.data.Model',
+            fields: [
+                {name: 'CODE', type: 'string'},
+                {name: 'HERSTRUCT_PLAN_TYPE_NAAM', type: 'string'},
+                {name: 'BEGINDATUM', type: 'date'},
+                {name: 'EINDDATUM', type: 'date'}
+            ]
+        });
+        Ext.define('Bedrijventerreinen.model.HoofdoorzakenVeroud', {
+            extend: 'Ext.data.Model',
+            fields: [
+                {name: 'CODE', type: 'string'},
+                {name: 'HOOFDOORZAAK_VEROUD_NAAM', type: 'string'},
+                {name: 'BEGINDATUM', type: 'date'},
+                {name: 'EINDDATUM', type: 'date'}
+            ]
+        });
+        Ext.define('Bedrijventerreinen.model.HerstructFasen', {
+            extend: 'Ext.data.Model',
+            fields: [
+                {name: 'CODE', type: 'string'},
+                {name: 'HERSTRUCT_FASE_NAAM', type: 'string'},
+                {name: 'BEGINDATUM', type: 'date'},
+                {name: 'EINDDATUM', type: 'date'}
             ]
         });
     }

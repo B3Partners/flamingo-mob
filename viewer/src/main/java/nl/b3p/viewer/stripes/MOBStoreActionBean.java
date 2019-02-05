@@ -34,10 +34,13 @@ import nl.b3p.viewer.config.services.Layer;
 import nl.b3p.viewer.config.services.SimpleFeatureType;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.geotools.data.Query;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.factory.GeoTools;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
+import org.geotools.filter.text.cql2.CQLException;
+import org.geotools.filter.text.ecql.ECQL;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opengis.feature.Property;
@@ -71,8 +74,7 @@ public class MOBStoreActionBean extends LocalizableApplicationActionBean {
     
     @Validate(on="metingen")
     private Integer GEM_CODE_CBS;
-    
-    
+
     @Validate(on="metingen")
     private Integer METING_ID;
     
@@ -138,6 +140,14 @@ public class MOBStoreActionBean extends LocalizableApplicationActionBean {
     
     @DefaultHandler
     public Resolution store() {
+        return readFeatures(featureTypeName, null);
+    }
+
+    public Resolution metingen() {
+        return readFeatures("BEDR_TERREIN_METINGEN", String.format("METING_ID = %d AND GEM_CODE_CBS = %d", METING_ID, GEM_CODE_CBS));
+    }
+
+    private Resolution readFeatures(String featureTypeName, String filter) {
         String error;
 
         JSONObject response = new JSONObject();
@@ -164,65 +174,13 @@ public class MOBStoreActionBean extends LocalizableApplicationActionBean {
         SimpleFeatureType sft = fs.getFeatureType(featureTypeName);
         try {
             org.geotools.data.FeatureSource source = sft.openGeoToolsFeatureSource();
-            FeatureCollection fc = source.getFeatures();
-            FeatureIterator<SimpleFeature> it = null;
-            JSONArray features = new JSONArray();
-            response.put("features", features);
-            try {
-                it = fc.features();
-                int featureIndex = 0;
-                while (it.hasNext()) {
-                    SimpleFeature f = it.next();
-                    features.put(featureToJSON(f));
-
-                }
-            } catch (NoSuchElementException e) {
-                log.error("Cannot get feature:", e);
-            } finally {
-                if (it != null) {
-                    it.close();
-                }
-                source.getDataStore().dispose();
+            Filter ff = null;
+            if (filter != null) {
+                ff = ECQL.toFilter(filter);
             }
-        } catch (Exception ex) {
-            log.error("Cannot open featuresource:", ex);
-        }
-
-        return new StreamingResolution("application/json", new StringReader(response.toString(4)));
-    }
-    
-    public Resolution metingen(){
-        String error;
-
-        JSONObject response = new JSONObject();
-        EntityManager em = Stripersist.getEntityManager();
-        /*  @ToDo: do some authorizations
-        if (!Authorizations.isAppLayerReadAuthorized(application, al, context.getRequest(), em)) {
-            error = "Not authorized";
-            break;
-        }*/
-
-        Layer layer = appLayer.getService().getLayer(appLayer.getLayerName(), em);
-
-        if (layer == null) {
-            error = getBundle().getString("viewer.editfeatureactionbean.3");
-            return new StreamingResolution("application/json", new StringReader(error));
-        }
-
-        if (layer.getFeatureType() == null) {
-            error = getBundle().getString("viewer.editfeatureactionbean.4");
-            return new StreamingResolution("application/json", new StringReader(error));
-        }
-
-        fs = layer.getFeatureType().getFeatureSource();
-        SimpleFeatureType sft = fs.getFeatureType("BEDR_TERREIN_METINGEN");
-
-        FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2(GeoTools.getDefaultHints());
-        Filter and = ff.and(ff.equal(ff.property("METING_ID"), ff.literal(METING_ID)), ff.equal(ff.property("GEM_CODE_CBS"), ff.literal(GEM_CODE_CBS)));
-        
-        try {
-            org.geotools.data.FeatureSource source = sft.openGeoToolsFeatureSource();
-            FeatureCollection fc = source.getFeatures(and);
+            FeatureCollection fc = ff == null
+                ? source.getFeatures()
+                : source.getFeatures(ff);
             FeatureIterator<SimpleFeature> it = null;
             JSONArray features = new JSONArray();
             response.put("features", features);
