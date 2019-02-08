@@ -88,6 +88,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     getSelectedGemeenteAndPeildatum: function() {
         return Ext.Ajax.request({
             url: actionBeans["mobstore"],
+            method: 'GET',
             params: { selection: true },
             scope: this,
             success: function(result) {
@@ -108,11 +109,11 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     renderContent: function() {
         this.windowLoaded = true;
         this.container.add(this.createFilterContainer());
-        this.container.add(this.createForm());
+        this.container.add(this.createTabForm());
         this.filterBedrijventerreinen();
         this.container.setLoading(false);
     },
-    createForm: function() {
+    createTabForm: function() {
         this.form = Ext.create('Ext.tab.Panel', {
             flex: 1,
             plain: true,
@@ -566,24 +567,23 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         return store;
     },
     save: function() {
-        var data = {
-            algemeen: this.algemeenForm.getForm().getValues(),
-            bereikbaarheid: this.bereikbaarheidForm.getForm().getValues(),
-            oppervlakte: this.oppervlakteForm.getForm().getValues()
-        };
-        this.getGridValues(this.stores.prijzen, "verkoopprijs", ["min", "max"], data.algemeen);
-        this.getGridValues(this.stores.prijzen, "erfpachtprijs", ["min", "max"], data.algemeen);
-        this.getGridValues(this.stores.oppervlak, "terugkoop", ["oppervlak"], data.algemeen);
-
+        var data = {};
+        data = Ext.Object.merge({}, data, this.algemeenForm.getForm().getValues());
+        data = Ext.Object.merge({}, data, this.bereikbaarheidForm.getForm().getValues());
+        data = Ext.Object.merge({}, data, this.oppervlakteForm.getForm().getValues());
+        data = Ext.Object.merge({}, data, this.getGridValues(this.stores.prijzen, "verkoopprijs", { "min": "MIN_VERKOOPPRIJS", "max": "MAX_VERKOOPPRIJS" }));
+        data = Ext.Object.merge({}, data, this.getGridValues(this.stores.prijzen, "erfpachtprijs", { "min": "MIN_ERFPACHTPRIJS", "max": "MAX_ERFPACHTPRIJS" }));
+        data = Ext.Object.merge({}, data, this.getGridValues(this.stores.oppervlak, "terugkoop", { "oppervlak": "OPP_TERUGKOOP_GEMEENTE" }));
         var errorMessage = 'Het is helaas niet gelukt om op te slaan. Probeer het alstublieft opnieuw. Indien het probleem blijft bestaan, neem dan contact op met de beheerder van deze applicatie.';
         Ext.Ajax.request({
             url: actionBeans["mobstore"],
+            method: 'POST',
             params: {
                 application: FlamingoAppLoader.get('appId'),
                 appLayer: this.layer,
                 GEM_CODE_CBS: this.gemeente,
                 METING_ID: this.peildatum,
-                meting: data,
+                meting: Ext.JSON.encode(data),
                 save: true
             },
             scope: this,
@@ -741,11 +741,11 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             store.findRecord("id", key).set(updated);
         }
     },
-    getGridValues: function(store, key, values, returnObject) {
+    getGridValues: function(store, key, values) {
         var record = store.findRecord("id", key);
-        returnObject = returnObject || {};
-        for(var i = 0; i < values.length; i++) {
-            returnObject[values[i]] = record.get(values[i]) || "";
+        var returnObject = {};
+        for(var key in values) if (values.hasOwnProperty(key)) {
+            returnObject[values[key]] = record.get(key) || "";
         }
         return returnObject;
     },
