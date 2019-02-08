@@ -14,6 +14,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+/* global Ext */
+
 /**
  * Bedrijventerreinen base component
  * @author <a href="mailto:geertplaisier@b3partners.nl">Geert Plaisier</a>
@@ -21,7 +23,12 @@
  */
 Ext.define ("viewer.components.BedrijventerreinenBase", {
     singleton : true,
+    modelsInitialized:false,
     defineModels: function() {
+        if(this.modelsInitialized){
+            return;
+        }
+        this.modelsInitialized = true;
         Ext.define('Bedrijventerreinen.model.Classificatie', {
             extend: 'Ext.data.Model',
             fields: ['CLS_ID', 'CLASSIFICATIE']
