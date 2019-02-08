@@ -16,10 +16,15 @@
  */
 package nl.b3p.viewer.stripes;
 
-import net.sourceforge.stripes.action.ActionBeanContext;
+import java.io.StringReader;
 import net.sourceforge.stripes.action.Resolution;
+import net.sourceforge.stripes.action.StreamingResolution;
 import net.sourceforge.stripes.action.StrictBinding;
 import net.sourceforge.stripes.action.UrlBinding;
+import net.sourceforge.stripes.validation.Validate;
+import nl.b3p.viewer.config.app.Application;
+import nl.b3p.viewer.config.app.ApplicationLayer;
+import org.json.JSONObject;
 
 /**
  *
@@ -28,11 +33,53 @@ import net.sourceforge.stripes.action.UrlBinding;
 @UrlBinding("/action/mob/feature/edit")
 @StrictBinding
 public class MOBEditActionBean extends EditFeatureActionBean{
+    /*
+    application: FlamingoAppLoader.get('appId'),
+                appLayer: this.layer,
+                GEM_CODE_CBS: this.gemeente,
+                METING_ID: this.peildatum,
+                form: data,
+    */
     
+    @Validate
+    private Application application;
+    
+    @Validate
+    private ApplicationLayer appLayer;
+    
+    @Validate
+    private String GEM_CODE_CBS;
+    
+    @Validate
+    private String METING_ID;
+    
+    @Validate
+    private String meting;
 
     // <editor-fold desc="Getters and setters" defaultstate="collapsed">
+    public String getGEM_CODE_CBS() {
+        return GEM_CODE_CBS;
+    }
 
-    
+    public void setGEM_CODE_CBS(String GEM_CODE_CBS) {
+        this.GEM_CODE_CBS = GEM_CODE_CBS;
+    }
+
+    public String getMETING_ID() {
+        return METING_ID;
+    }
+
+    public void setMETING_ID(String METING_ID) {
+        this.METING_ID = METING_ID;
+    }
+
+    public String getMeting() {
+        return meting;
+    }
+
+    public void setMeting(String meting) {
+        this.meting = meting;
+    }
     // </editor-fold>
     
     public Resolution editFeature(){
@@ -44,6 +91,13 @@ public class MOBEditActionBean extends EditFeatureActionBean{
         // CORRECTIESTATUS
       //  Resolution r = saveRelatedFeatures();
         
+        return edit();
+    }
+    
+    public Resolution saveIbis(){
+        setFeature(meting);
+        
+        //return new StreamingResolution("application/json", new StringReader(obj.toString(4)));
         return edit();
     }
     

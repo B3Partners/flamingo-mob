@@ -576,7 +576,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         data = Ext.Object.merge({}, data, this.getGridValues(this.stores.oppervlak, "terugkoop", { "oppervlak": "OPP_TERUGKOOP_GEMEENTE" }));
         var errorMessage = 'Het is helaas niet gelukt om op te slaan. Probeer het alstublieft opnieuw. Indien het probleem blijft bestaan, neem dan contact op met de beheerder van deze applicatie.';
         Ext.Ajax.request({
-            url: actionBeans["mobstore"],
+            url: actionBeans["mobeditfeature"],
             method: 'POST',
             params: {
                 application: FlamingoAppLoader.get('appId'),
@@ -584,7 +584,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 GEM_CODE_CBS: this.gemeente,
                 METING_ID: this.peildatum,
                 meting: Ext.JSON.encode(data),
-                save: true
+                saveIbis: true
             },
             scope: this,
             success: function(result) {
