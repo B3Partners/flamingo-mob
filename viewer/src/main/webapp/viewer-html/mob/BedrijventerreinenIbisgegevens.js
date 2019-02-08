@@ -27,7 +27,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     stores: {},
     storesLoading: 0,
     windowLoaded: false,
-    config:{
+    config: {
         title: null,
         titlebarIcon: null,
         tooltip: null,
@@ -101,9 +101,10 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 padding: 10
             },
             bbar: [
+                { xtype: 'container', itemId: 'edit-indicator' },
                 '->',
                 { xtype: 'button', text: 'Opslaan', itemId: 'next-button', scope: this, handler: function() { this.save(); } },
-                { xtype: 'button', text: 'Annuleren' },
+                { xtype: 'button', text: 'Annuleren', scope: this, handler: function() { this.updateForms(); } },
                 '-',
                 { xtype: 'button', text: 'Help' }
             ]
@@ -122,7 +123,13 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             defaults: {
                 labelAlign: 'left',
                 labelWidth: 175,
-                maxWidth: 500
+                maxWidth: 500,
+                listeners: {
+                    scope: this,
+                    change: function() {
+                        this.showEditing(true);
+                    }
+                }
             },
             items: [
                 { fieldLabel: "Kernnaam", name: 'KERN_NAAM' },
@@ -146,14 +153,20 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 ),
                 {
                     xtype: 'gridpanel',
-                    viewConfig:{
+                    viewConfig: {
                         markDirty: false
                     },
                     header: false,
                     store: this.stores.prijzen,
                     plugins: {
                         ptype: 'cellediting',
-                        clicksToEdit: 1
+                        clicksToEdit: 1,
+                        listeners: {
+                            scope: this,
+                            edit: function() {
+                                this.showEditing(true);
+                            }
+                        }
                     },
                     selModel: 'cellmodel',
                     columns: [
@@ -165,7 +178,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 },
                 {
                     xtype: 'gridpanel',
-                    viewConfig:{
+                    viewConfig: {
                         markDirty: false
                     },
                     header: false,
@@ -193,7 +206,13 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             defaults: {
                 labelAlign: 'left',
                 labelWidth: 175,
-                maxWidth: 500
+                maxWidth: 500,
+                listeners: {
+                    scope: this,
+                    change: function() {
+                        this.showEditing(true);
+                    }
+                }
             },
             items: [
                 { xtype: 'combobox', queryMode: 'local', name: 'SPOOR_ONTSLUITING_CODE', fieldLabel: 'Ontsluiting spoor',
@@ -233,20 +252,35 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             defaults: {
                 labelAlign: 'left',
                 labelWidth: 175,
-                maxWidth: 500
+                maxWidth: 500,
+                listeners: {
+                    scope: this,
+                    change: function() {
+                        this.showEditing(true);
+                    }
+                }
             },
             items: [
                 { xtype: 'combobox', queryMode: 'local', name: 'IND_VOL', fieldLabel: 'Vol', disabled: true, store: this.stores.indicatie_vol },
                 {
                     xtype: 'gridpanel',
-                    viewConfig:{
+                    viewConfig: {
                         markDirty: false
                     },
                     header: false,
                     store: this.stores.oppervlak,
                     plugins: {
                         ptype: 'cellediting',
-                        clicksToEdit: 1
+                        clicksToEdit: 1,
+                        listeners: {
+                            scope: this,
+                            edit: function() {
+                                this.showEditing(true);
+                            },
+                            beforeedit: function(editor, context) {
+                                return context.record.get("editable") || false;
+                            }
+                        }
                     },
                     selModel: 'cellmodel',
                     columns: [
@@ -257,7 +291,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 },
                 {
                     xtype: 'gridpanel',
-                    viewConfig:{
+                    viewConfig: {
                         markDirty: false
                     },
                     header: false,
@@ -329,7 +363,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     ],
                     header: false,
                     hideHeaders: true,
-                    viewConfig:{
+                    viewConfig: {
                         markDirty: false
                     },
                     listeners: {
@@ -345,7 +379,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 dock: 'bottom',
                 style: 'border-width: 1px 0 1px 1px !important;',
                 items: [
-                    { xtype: 'button', text: 'Indienen', flex: 1, scope: this, handler: this.submit() }
+                    { xtype: 'button', text: 'Indienen', flex: 1, scope: this, handler: this.submitConfirm }
                 ]
             }]
         });
@@ -490,13 +524,96 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         return store;
     },
     save: function() {
+        var data = {
+            algemeen: this.algemeenForm.getForm().getValues(),
+            bereikbaarheid: this.bereikbaarheidForm.getForm().getValues(),
+            oppervlakte: this.oppervlakteForm.getForm().getValues()
+        };
+        this.getGridValues(this.stores.prijzen, "verkoopprijs", ["min", "max"], data.algemeen);
+        this.getGridValues(this.stores.prijzen, "erfpachtprijs", ["min", "max"], data.algemeen);
+        this.getGridValues(this.stores.oppervlak, "terugkoop", ["oppervlak"], data.algemeen);
+
+        var errorMessage = 'Het is helaas niet gelukt om op te slaan. Probeer het alstublieft opnieuw. Indien het probleem blijft bestaan, neem dan contact op met de beheerder van deze applicatie.';
+        Ext.Ajax.request({
+            url: actionBeans["mobstore"],
+            params: {
+                application: FlamingoAppLoader.get('appId'),
+                appLayer: this.layer,
+                GEM_CODE_CBS: this.gemeente,
+                METING_ID: this.peildatum,
+                form: data,
+                save: true
+            },
+            scope: this,
+            success: function(result) {
+                var response = Ext.JSON.decode(result.responseText);
+                if(response.success) {
+                    this.showEditing(false);
+                    // Update bedrijventerrein record
+                } else {
+                    this.showErrorDialog(errorMessage);
+                }
+            },
+            failure: function(result) {
+                this.showErrorDialog(errorMessage);
+            }
+        });
+    },
+    submitConfirm: function() {
+        Ext.MessageBox.show({
+            title: 'Weet u het zeker?',
+            message: 'Weet u zeker dat u wilt indienen? Hierna aanpassen is niet meer mogelijk',
+            buttons: Ext.Msg.YESNO,
+            icon: Ext.Msg.QUESTION,
+            scope: this,
+            fn: function(btn) {
+                if (btn === 'yes') {
+                    this.submit();
+                }
+            }
+        });
     },
     submit: function() {
-        // @TODO: implement submit
+        var errorMessage = 'Het is helaas niet gelukt om in te dienen. Probeer het alstublieft opnieuw. Indien het probleem blijft bestaan, neem dan contact op met de beheerder van deze applicatie.';
+        Ext.Ajax.request({
+            url: actionBeans["mobstore"],
+            params: {
+                application: FlamingoAppLoader.get('appId'),
+                appLayer: this.layer,
+                GEM_CODE_CBS: this.gemeente,
+                METING_ID: this.peildatum,
+                submit: true
+            },
+            success: function(result) {
+                var response = Ext.JSON.decode(result.responseText);
+                if(response.success) {
+
+                } else {
+                    this.showErrorDialog(errorMessage);
+                }
+            },
+            failure: function(result) {
+                this.showErrorDialog(errorMessage);
+            }
+        });
+    },
+    showEditing: function(edit) {
+        Ext.ComponentQuery.query("#edit-indicator")[0].update(edit ? "* is aangepast" : "");
+    },
+    showErrorDialog: function(msg, title) {
+        Ext.MessageBox.show({
+            title: title || 'Er is iets mis gegaan',
+            message: msg,
+            buttons: Ext.Msg.OK,
+            icon: Ext.Msg.ERROR
+        });
     },
     updateSelection: function(bedrijventerrein) {
         this.bedrijventerrein = bedrijventerrein;
-        // this.form.setActiveTab(0);
+        this.updateForms();
+    },
+    updateForms: function() {
+        var bedrijventerrein = this.bedrijventerrein;
         var algemeenValues = {
             'KERN_NAAM': bedrijventerrein.get("BEDRIJVENTERREIN").get("KERN_NAAM"),
             'PLAN_FASE': bedrijventerrein.get("PLAN_FASE_CODE"),
@@ -550,6 +667,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             // niet_terstond_uitgeefbaar: { overheid: '', particuler: '' },
             // grootsts_uitgeefbaar_deel: { overheid: '', particuler: '' }
         });
+        this.showEditing(false);
     },
     updateGrid: function(store, updates) {
         var updated;
@@ -567,6 +685,14 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             }
             store.findRecord("id", key).set(updated);
         }
+    },
+    getGridValues: function(store, key, values, returnObject) {
+        var record = store.findRecord("id", key);
+        returnObject = returnObject || {};
+        for(var i = 0; i < values.length; i++) {
+            returnObject[values[i]] = record.get(values[i]) || "";
+        }
+        return returnObject;
     },
     getExtComponents: function() {
         return [ this.container.getId() ];
