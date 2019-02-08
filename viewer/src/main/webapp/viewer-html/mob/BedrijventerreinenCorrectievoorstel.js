@@ -309,7 +309,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     getEditFeature: function () {
         return Ext.create("viewer.EditFeature", {
             viewerController: this.config.viewerController,
-            actionbeanUrl: actionBeans["mobeditfeature"]
+            actionbeanUrl: actionBeans["mobeditfeature"] + "?editFeature=true"
         });
     },
     saveSucces: function () {
