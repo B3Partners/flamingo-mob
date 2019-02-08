@@ -159,6 +159,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 }
             },
             items: [
+                { xtype: 'container', itemId: 'algemeen-errors' },
                 { fieldLabel: "Kernnaam", name: 'KERN_NAAM' },
                 { xtype: 'combobox', editable: false, name: 'PLAN_FASE', fieldLabel: "Planfase",  queryMode: 'local',
                     store: this.stores.planfase, displayField: 'PLAN_FASE_NAAM', valueField: 'CODE' },
@@ -246,6 +247,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 }
             },
             items: [
+                { xtype: 'container', itemId: 'bereikbaarheid-errors' },
                 { xtype: 'combobox', editable: false, queryMode: 'local', name: 'SPOOR_ONTSLUITING_CODE', fieldLabel: 'Ontsluiting spoor',
                     store: this.stores.ontsluiting_spoor, displayField: 'SPOOR_ONTSLUITING_NAAM', valueField: 'CODE' },
                 { xtype: 'combobox', editable: false, queryMode: 'local', name: 'WATER_ONTSLUITING_CODE', fieldLabel: 'Ontsluiting water',
@@ -292,6 +294,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 }
             },
             items: [
+                { xtype: 'container', itemId: 'oppervlak-errors' },
                 { xtype: 'combobox', editable: false, queryMode: 'local', name: 'IND_VOL', fieldLabel: 'Vol', readOnly: true, store: this.stores.indicatie_vol },
                 {
                     xtype: 'gridpanel',
@@ -481,7 +484,12 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             }
         }, this);
         var prijzenStore = Ext.create('Ext.data.Store', {
-            fields: [ 'label', 'min', 'max' ],
+            fields: [
+                { 'name': 'id' },
+                { 'name': 'label' },
+                { 'name': 'min', 'type': 'number' },
+                { 'name': 'max', 'type': 'number' }
+            ],
             data: [
                 { id: 'verkoopprijs', label: 'Verkoopprijs', min: '', max: '' },
                 { id: 'erfpachtprijs', label: 'Erfpachtprijs', min: '', max: '' }
@@ -495,7 +503,12 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             ]
         });
         var oppervlakStore = Ext.create('Ext.data.Store', {
-            fields: [ 'label', 'oppervlak', 'editable' ],
+            fields: [
+                { 'name': 'id' },
+                { 'name': 'label' },
+                { 'name': 'oppervlak', 'type': 'number' },
+                { 'name': 'editable', 'type': 'boolean', 'defaultValue': false }
+            ],
             data: [
                 { id: 'bruto', label: 'Bruto', oppervlak: '' },
                 { id: 'netto', label: 'Netto', oppervlak: '' },
@@ -566,14 +579,63 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         }
         return store;
     },
+    validate: function() {
+        var formData = this.getFormData();
+        var algemeen_validation = [];
+        var bereikbaarheid_validation = [];
+        var oppervlak_validation = [];
+        if (formData.MIN_VERKOOPPRIJS < 0) { algemeen_validation.push("Minimale verkoopprijs moet 0 of hoger zijn"); }
+        if (formData.MAX_VERKOOPPRIJS < 0) { algemeen_validation.push("Maximale verkoopprijs moet 0 of hoger zijn"); }
+        if (formData.MIN_ERFPACHTPRIJS < 0) { algemeen_validation.push("Minimale erfpachtprijs moet 0 of hoger zijn"); }
+        if (formData.MAX_ERFPACHTPRIJS < 0) { algemeen_validation.push("Maximale erfpachtprijs moet 0 of hoger zijn"); }
+        if (formData.MAX_VERKOOPPRIJS < formData.MIN_VERKOOPPRIJS) {
+            algemeen_validation.push("Maximale verkoopprijs moet gelijk of hoger zijn dan minimale verkoopprijs");
+        }
+        if (formData.MAX_ERFPACHTPRIJS < formData.MIN_ERFPACHTPRIJS) {
+            algemeen_validation.push("Maximale erfpachtprijs moet gelijk of hoger zijn dan minimale erfpachtprijs");
+        }
+        if (formData.IND_VEROUDERD === "Ja" && (formData.HOOFDOORZAAK_VEROUD_CODE === "" || formData.BRUTO_OPP_VEROUDERD === "")) {
+            bereikbaarheid_validation.push("Indien bij Verouderd voor Ja is gekozen is het verplicht om Hoofdoorzaak veroudering en Brutto ha verouderd in te vullen");
+        }
+        if (
+            (formData.HERSTRUCT_PLAN_TYPE_CODE === "A" && formData.OPP_FACELIFT === "") ||
+            (formData.HERSTRUCT_PLAN_TYPE_CODE === "B" && formData.OPP_REVITALISATIE === "") ||
+            (formData.HERSTRUCT_PLAN_TYPE_CODE === "C" && formData.OPP_ZWARE_REVITALISATIE === "") ||
+            (formData.HERSTRUCT_PLAN_TYPE_CODE === "D" && formData.OPP_HERPROFILERING === "") ||
+            (formData.HERSTRUCT_PLAN_TYPE_CODE === "F" && formData.OPP_TRANSFORMATIE === "")
+        ) {
+            bereikbaarheid_validation.push("Vul de oppervlakte in, passend bij het gekozen Herstructereringsplan");
+        }
+        this.clearMessagesInContainer("#algemeen-errors");
+        this.clearMessagesInContainer("#bereikbaarheid-errors");
+        this.clearMessagesInContainer("#oppervlak-errors");
+        this.form.getTabBar().items.get(0).setIconCls("");
+        this.form.getTabBar().items.get(1).setIconCls("");
+        this.form.getTabBar().items.get(2).setIconCls("");
+        var tabSet = false;
+        if (algemeen_validation.length !== 0 || bereikbaarheid_validation.length !== 0 || oppervlak_validation.length !== 0) {
+            tabSet = this.showErrorsInTab(algemeen_validation, "#algemeen-errors", 0, tabSet);
+            tabSet = this.showErrorsInTab(bereikbaarheid_validation, "#bereikbaarheid-errors", 1, tabSet);
+            this.showErrorsInTab(oppervlak_validation, "#oppervlak-errors", 2, tabSet);
+            return false;
+        }
+        return true;
+    },
+    showErrorsInTab: function(validation, container, tabNo, tabSet) {
+        if (validation.length !== 0) {
+            this.form.getTabBar().items.get(tabNo).setIconCls("x-fa fa-exclamation-triangle");
+            this.addErrorMessageInContainer(container, "- " + validation.join("<br />- "));
+            if (!tabSet) {
+                this.form.setActiveTab(tabNo);
+                tabSet = true;
+            }
+        }
+        return tabSet;
+    },
     save: function() {
-        var data = {};
-        data = Ext.Object.merge({}, data, this.algemeenForm.getForm().getValues());
-        data = Ext.Object.merge({}, data, this.bereikbaarheidForm.getForm().getValues());
-        data = Ext.Object.merge({}, data, this.oppervlakteForm.getForm().getValues());
-        data = Ext.Object.merge({}, data, this.getGridValues(this.stores.prijzen, "verkoopprijs", { "min": "MIN_VERKOOPPRIJS", "max": "MAX_VERKOOPPRIJS" }));
-        data = Ext.Object.merge({}, data, this.getGridValues(this.stores.prijzen, "erfpachtprijs", { "min": "MIN_ERFPACHTPRIJS", "max": "MAX_ERFPACHTPRIJS" }));
-        data = Ext.Object.merge({}, data, this.getGridValues(this.stores.oppervlak, "terugkoop", { "oppervlak": "OPP_TERUGKOOP_GEMEENTE" }));
+        if (!this.validate()) {
+            return;
+        }
         var errorMessage = 'Het is helaas niet gelukt om op te slaan. Probeer het alstublieft opnieuw. Indien het probleem blijft bestaan, neem dan contact op met de beheerder van deze applicatie.';
         Ext.Ajax.request({
             url: actionBeans["mobstore"],
@@ -583,7 +645,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 appLayer: this.layer,
                 GEM_CODE_CBS: this.gemeente,
                 METING_ID: this.peildatum,
-                meting: Ext.JSON.encode(data),
+                meting: Ext.JSON.encode(this.getFormData()),
                 save: true
             },
             scope: this,
@@ -711,6 +773,16 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         });
         this.showEditing(false);
     },
+    getFormData: function() {
+        var data = {};
+        data = Ext.Object.merge({}, data, this.algemeenForm.getForm().getValues());
+        data = Ext.Object.merge({}, data, this.bereikbaarheidForm.getForm().getValues());
+        data = Ext.Object.merge({}, data, this.oppervlakteForm.getForm().getValues());
+        data = Ext.Object.merge({}, data, this.getGridValues(this.stores.prijzen, "verkoopprijs", { "min": "MIN_VERKOOPPRIJS", "max": "MAX_VERKOOPPRIJS" }));
+        data = Ext.Object.merge({}, data, this.getGridValues(this.stores.prijzen, "erfpachtprijs", { "min": "MIN_ERFPACHTPRIJS", "max": "MAX_ERFPACHTPRIJS" }));
+        data = Ext.Object.merge({}, data, this.getGridValues(this.stores.oppervlak, "terugkoop", { "oppervlak": "OPP_TERUGKOOP_GEMEENTE" }));
+        return data;
+    },
     setDisabled: function(disabled) {
         disabled = !!disabled;
         this.disabled = disabled;
@@ -748,6 +820,25 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             returnObject[values[key]] = record.get(key) || "";
         }
         return returnObject;
+    },
+    clearMessagesInContainer: function(query) {
+        var container = this.getContentContainer().query(query);
+        if(container.length > 0) {
+            container[0].removeAll();
+        }
+    },
+    addErrorMessageInContainer: function(query, message) {
+        var container = this.getContentContainer().query(query);
+        if(container.length > 0) {
+            container[0].add({
+                xtype: 'container',
+                style: {
+                    color: 'red'
+                },
+                margin: '0 0 10 0',
+                html: message
+            });
+        }
     },
     getExtComponents: function() {
         return [ this.container.getId() ];
