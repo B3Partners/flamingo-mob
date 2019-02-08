@@ -24,6 +24,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     bedrijventerreinen: null,
     gemeente: null,
     peildatum: null,
+    disabled: false,
     stores: {},
     storesLoading: 0,
     windowLoaded: false,
@@ -45,25 +46,19 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         viewer.components.BedrijventerreinenIbisgegevens.superclass.constructor.call(this, this.config);
         viewer.components.BedrijventerreinenBase.defineModels();
         this.bedrijventerreinen = this.createDefaultMobAjaxStore('Bedrijventerreinen.model.Bedrijventerreinen', "BEDRIJVENTERREINEN", "", true);
-        this.getContentContainer().setLoading("Bezig met laden...");
+        this.loadWindow();
+        this.container.setLoading("Bezig met laden...");
         this.bedrijventerreinen.load({
             scope: this,
             callback: function(records, operation, success) {
+                // Create stores triggers load events. When all stores are loaded, storesLoaded() will be executed
                 this.createStores();
             }
         });
         return this;
     },
-    storesLoaded: function() {
-        if (this.storesLoading > 0 || this.windowLoaded) {
-            return;
-        }
-        this.loadWindow();
-        this.getContentContainer().setLoading(false);
-    },
     loadWindow: function() {
         var me = this;
-        this.windowLoaded = true;
         this.renderButton({
             handler: function(){
                 me.popup.show();
@@ -79,12 +74,43 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 align: 'stretch'
             },
             padding: '5px',
-            items: [
-                this.createFilterContainer(),
-                this.createForm()
-            ]
+            items: []
         });
         this.getContentContainer().add(this.container);
+    },
+    storesLoaded: function() {
+        if (this.storesLoading > 0 || this.windowLoaded) {
+            return;
+        }
+        // Get selected values for 'Gemeente' and 'Peildatum'
+        this.getSelectedGemeenteAndPeildatum();
+    },
+    getSelectedGemeenteAndPeildatum: function() {
+        return Ext.Ajax.request({
+            url: actionBeans["mobstore"],
+            params: { selection: true },
+            scope: this,
+            success: function(result) {
+                var response = Ext.JSON.decode(result.responseText);
+                if(response.success) {
+                    this.gemeente = response.GEM_CODE_CBS;
+                    this.peildatum = response.METING_ID;
+                    this.renderContent();
+                    return;
+                }
+                this.showErrorDialog("Er is iets mis gegaan bij het ophalen van de benodigde gegevens.");
+            },
+            failure: function() {
+                this.showErrorDialog("Er is iets mis gegaan bij het ophalen van de benodigde gegevens.");
+            }
+        });
+    },
+    renderContent: function() {
+        this.windowLoaded = true;
+        this.container.add(this.createFilterContainer());
+        this.container.add(this.createForm());
+        this.filterBedrijventerreinen();
+        this.container.setLoading(false);
     },
     createForm: function() {
         this.form = Ext.create('Ext.tab.Panel', {
@@ -133,18 +159,18 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             },
             items: [
                 { fieldLabel: "Kernnaam", name: 'KERN_NAAM' },
-                { xtype: 'combobox', name: 'PLAN_FASE', fieldLabel: "Planfase",  queryMode: 'local',
+                { xtype: 'combobox', editable: false, name: 'PLAN_FASE', fieldLabel: "Planfase",  queryMode: 'local',
                     store: this.stores.planfase, displayField: 'PLAN_FASE_NAAM', valueField: 'CODE' },
-                { xtype: 'combobox', name: 'GEM_CODE_CBS', fieldLabel: "Terreinbeheerder", queryMode: 'local',
+                { xtype: 'combobox', editable: false, name: 'GEM_CODE_CBS', fieldLabel: "Terreinbeheerder", queryMode: 'local',
                     store: this.stores.terreinbeheerder, displayField: 'GEMEENTE_NAAM', valueField: 'GEM_CODE_CBS' },
                 this.createColumnForm(
-                    { xtype: 'combobox', name: 'WERKLOCATIE_TYPE_CODE', fieldLabel: "Werklocatietype", queryMode: 'local',
+                    { xtype: 'combobox', editable: false, name: 'WERKLOCATIE_TYPE_CODE', fieldLabel: "Werklocatietype", queryMode: 'local',
                         store: this.stores.werklocatietype, displayField: 'WERKLOCATIE_TYPE_OMSCHR', valueField: 'CODE' },
-                    { xtype: 'combobox', queryMode: 'local', name: 'IND_PARK_MANAGEMENT', fieldLabel: "Park management", store: this.stores.parkmanagement, grow: true }
+                    { xtype: 'combobox', editable: false, queryMode: 'local', name: 'IND_PARK_MANAGEMENT', fieldLabel: "Park management", store: this.stores.parkmanagement, grow: true }
                 ),
                 this.createColumnForm(
-                    { xtype: 'combobox', queryMode: 'local', name: 'IND_MILIEUZONERING', fieldLabel: "Milieuzonering", store: this.stores.milieuzonering, grow: true },
-                    { xtype: 'combobox', queryMode: 'local', name: 'MAX_MILIEYCATEGORIE_CODE', fieldLabel: "Maximale milieucategorie", grow: true,
+                    { xtype: 'combobox', editable: false, queryMode: 'local', name: 'IND_MILIEUZONERING', fieldLabel: "Milieuzonering", store: this.stores.milieuzonering, grow: true },
+                    { xtype: 'combobox', editable: false, queryMode: 'local', name: 'MAX_MILIEYCATEGORIE_CODE', fieldLabel: "Maximale milieucategorie", grow: true,
                         store: this.stores.maximale_milieucategorie, displayField: 'MILIECATEGORIE_NAAM', valueField: 'CODE' }
                 ),
                 this.createColumnForm(
@@ -158,6 +184,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     },
                     header: false,
                     store: this.stores.prijzen,
+                    itemId: 'prijzen-grid',
                     plugins: {
                         ptype: 'cellediting',
                         clicksToEdit: 1,
@@ -165,6 +192,9 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                             scope: this,
                             edit: function() {
                                 this.showEditing(true);
+                            },
+                            beforeedit: function(editor, context) {
+                                return !this.disabled;
                             }
                         }
                     },
@@ -215,21 +245,21 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 }
             },
             items: [
-                { xtype: 'combobox', queryMode: 'local', name: 'SPOOR_ONTSLUITING_CODE', fieldLabel: 'Ontsluiting spoor',
+                { xtype: 'combobox', editable: false, queryMode: 'local', name: 'SPOOR_ONTSLUITING_CODE', fieldLabel: 'Ontsluiting spoor',
                     store: this.stores.ontsluiting_spoor, displayField: 'SPOOR_ONTSLUITING_NAAM', valueField: 'CODE' },
-                { xtype: 'combobox', queryMode: 'local', name: 'WATER_ONTSLUITING_CODE', fieldLabel: 'Ontsluiting water',
+                { xtype: 'combobox', editable: false, queryMode: 'local', name: 'WATER_ONTSLUITING_CODE', fieldLabel: 'Ontsluiting water',
                     store: this.stores.ontsluiting_water, displayField: 'WATER_ONTSLUITING_NAAM', valueField: 'CODE' },
-                { xtype: 'combobox', queryMode: 'local', name: 'EXT_BEREIKBAARHEID_CODE', fieldLabel: 'Externe bereikbaarheid',
+                { xtype: 'combobox', editable: false, queryMode: 'local', name: 'EXT_BEREIKBAARHEID_CODE', fieldLabel: 'Externe bereikbaarheid',
                     store: this.stores.externe_bereikbaarheid, displayField: 'EXT_BEREIKBAARHEID_NAAM', valueField: 'CODE' },
-                { xtype: 'combobox', queryMode: 'local', name: 'PARKEERGELEGENHED_CODE', fieldLabel: 'Parkeergelegenheid',
+                { xtype: 'combobox', editable: false, queryMode: 'local', name: 'PARKEERGELEGENHED_CODE', fieldLabel: 'Parkeergelegenheid',
                     store: this.stores.parkeergelegenheid, displayField: 'PARKEERGELEGENHEID_NAAM', valueField: 'CODE' },
-                { xtype: 'combobox', queryMode: 'local', name: 'IND_VEROUDERD', fieldLabel: 'Verouderd', store: this.stores.verouderd, grow: true },
-                { xtype: 'combobox', queryMode: 'local', name: 'HOOFDOORZAAK_VEROUD_CODE', fieldLabel: 'Hoofdoorzaak veroudering',
+                { xtype: 'combobox', editable: false, queryMode: 'local', name: 'IND_VEROUDERD', fieldLabel: 'Verouderd', store: this.stores.verouderd, grow: true },
+                { xtype: 'combobox', editable: false, queryMode: 'local', name: 'HOOFDOORZAAK_VEROUD_CODE', fieldLabel: 'Hoofdoorzaak veroudering',
                     store: this.stores.hoofdoorzaak_veroudering, displayField: 'HOOFDOORZAAK_VEROUD_NAAM', valueField: 'CODE' },
                 { fieldLabel: 'Bruto ha verouderd', name: 'BRUTO_OPP_VEROUDERD', value: '', maxWidth: 275 },
-                { xtype: 'combobox', queryMode: 'local', name: 'HERSTRUCT_PLAN_TYPE_CODE', fieldLabel: 'Herstructereringsplan',
+                { xtype: 'combobox', editable: false, queryMode: 'local', name: 'HERSTRUCT_PLAN_TYPE_CODE', fieldLabel: 'Herstructereringsplan',
                     store: this.stores.herstructereringsplan, displayField: 'HERSTRUCT_PLAN_TYPE_NAAM', valueField: 'CODE' },
-                { xtype: 'combobox', queryMode: 'local', name: 'HERSTRUCT_FASE_CODE', fieldLabel: 'Herstructereringsfase',
+                { xtype: 'combobox', editable: false, queryMode: 'local', name: 'HERSTRUCT_FASE_CODE', fieldLabel: 'Herstructereringsfase',
                     store: this.stores.herstructereringsfase, displayField: 'HERSTRUCT_FASE_NAAM', valueField: 'CODE' },
                 { fieldLabel: 'Facelift (ha)', name: 'OPP_FACELIFT', value: '', maxWidth: 275 },
                 { fieldLabel: 'Revitalisatie (ha)', name: 'OPP_REVITALISATIE', value: '', maxWidth: 275 },
@@ -261,12 +291,13 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 }
             },
             items: [
-                { xtype: 'combobox', queryMode: 'local', name: 'IND_VOL', fieldLabel: 'Vol', disabled: true, store: this.stores.indicatie_vol },
+                { xtype: 'combobox', editable: false, queryMode: 'local', name: 'IND_VOL', fieldLabel: 'Vol', readOnly: true, store: this.stores.indicatie_vol },
                 {
                     xtype: 'gridpanel',
                     viewConfig: {
                         markDirty: false
                     },
+                    itemId: 'oppervlak-grid',
                     header: false,
                     store: this.stores.oppervlak,
                     plugins: {
@@ -278,6 +309,9 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                                 this.showEditing(true);
                             },
                             beforeedit: function(editor, context) {
+                                if (this.disabled) {
+                                    return false;
+                                }
                                 return context.record.get("editable") || false;
                             }
                         }
@@ -326,12 +360,16 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             items: [
                 {
                     xtype: 'combobox',
+                    editable: false,
                     queryMode: 'local',
                     labelAlign: 'top',
                     fieldLabel: 'Gemeente',
+                    itemId: 'gemeente',
                     store: this.stores.gemeentes,
                     displayField: 'GEMEENTE_NAAM',
                     valueField: 'GEM_CODE_CBS',
+                    value: this.gemeente,
+                    readOnly: true,
                     listeners: {
                         scope: this,
                         change: function(combo, value) {
@@ -341,12 +379,16 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 },
                 {
                     xtype: 'combobox',
+                    editable: false,
                     queryMode: 'local',
                     labelAlign: 'top',
                     fieldLabel: 'Peildatum',
+                    itemId: 'peildatum',
                     valueField: 'MTG_ID',
                     displayField: 'PEILDATUM_LABEL',
                     store: this.stores.peildatums,
+                    value: this.peildatum,
+                    readOnly: true,
                     listeners: {
                         scope: this,
                         change: function(combo, value) {
@@ -474,7 +516,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             peildatums: peildatumsStore,
             bedrijventerreinen: bedrijventerreinenMetingenStore,
             planfase: this.createDefaultMobAjaxStore('Bedrijventerreinen.model.PlanFasen', "PLAN_FASEN"),
-            terreinbeheerder:  gemeenteStore,
+            terreinbeheerder:  this.createDefaultMobAjaxStore('Bedrijventerreinen.model.Gemeenten', "GEMEENTEN"),
             werklocatietype: this.createDefaultMobAjaxStore('Bedrijventerreinen.model.WerklocatieTypen', "WERKLOCATIE_TYPEN"),
             parkmanagement: ["Ja", "Nee", "Onbekend"],
             milieuzonering: ["Ja", "Nee", "Onbekend"],
@@ -541,7 +583,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 appLayer: this.layer,
                 GEM_CODE_CBS: this.gemeente,
                 METING_ID: this.peildatum,
-                form: data,
+                meting: data,
                 save: true
             },
             scope: this,
@@ -668,6 +710,19 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             // grootsts_uitgeefbaar_deel: { overheid: '', particuler: '' }
         });
         this.showEditing(false);
+    },
+    setDisabled: function(disabled) {
+        disabled = !!disabled;
+        this.disabled = disabled;
+        this.setFormDisabled(this.algemeenForm, disabled);
+        this.setFormDisabled(this.bereikbaarheidForm, disabled);
+        this.setFormDisabled(this.oppervlakteForm, disabled);
+    },
+    setFormDisabled: function(form, disabled) {
+        var fields = form.query("textfield, combobox");
+        for(var i = 0; i < fields.length; i++) {
+            fields[i].setReadOnly(disabled);
+        }
     },
     updateGrid: function(store, updates) {
         var updated;

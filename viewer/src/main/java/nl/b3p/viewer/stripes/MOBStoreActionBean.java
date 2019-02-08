@@ -147,6 +147,14 @@ public class MOBStoreActionBean extends LocalizableApplicationActionBean {
         return readFeatures("BEDR_TERREIN_METINGEN", String.format("METING_ID = %d AND GEM_CODE_CBS = %d", METING_ID, GEM_CODE_CBS));
     }
 
+    public Resolution selection() {
+        JSONObject response = new JSONObject();
+        response.put("GEM_CODE_CBS", 141);
+        response.put("METING_ID", 1);
+        response.put("success", true);
+        return new StreamingResolution("application/json", new StringReader(response.toString(4)));
+    }
+
     private Resolution readFeatures(String featureTypeName, String filter) {
         String error;
 
