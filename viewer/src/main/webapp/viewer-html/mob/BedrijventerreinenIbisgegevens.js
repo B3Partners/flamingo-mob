@@ -86,63 +86,6 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         });
         this.getContentContainer().add(this.container);
     },
-    updateSelection: function(bedrijventerrein) {
-        this.bedrijventerrein = bedrijventerrein;
-        // this.form.setActiveTab(0);
-        var algemeenValues = {
-            'kernnaam': bedrijventerrein.get("BEDRIJVENTERREIN").get("KERN_NAAM"),
-            'planfase': bedrijventerrein.get("PLAN_FASE_CODE"),
-            'terreinbeheerder': bedrijventerrein.get("GEM_CODE_CBS"),
-            'werklocatietype': bedrijventerrein.get("WERKLOCATIE_TYPE_CODE"),
-            'park_management': bedrijventerrein.get("IND_PARK_MANAGEMENT"),
-            'milieuzonering': bedrijventerrein.get("IND_MILIEUZONERING"),
-            'maximale_milieucategorie': bedrijventerrein.get("MAX_MILIEYCATEGORIE_CODE"),
-            'startjaar_uitgifte': bedrijventerrein.get("BEDRIJVENTERREIN").get("START_JAAR") || '',
-            'beoogd_jaar_uitgifte': bedrijventerrein.get("JAAR_NIET_TERSTOND_UITG_GEM") || '',
-            'opmerkingen': bedrijventerrein.get("OPMERKING_TBV_IBIS")
-        };
-        this.algemeenForm.getForm().setValues(algemeenValues);
-        this.updateGrid(this.stores.prijzen, {
-            verkoopprijs: { min: bedrijventerrein.get("MIN_VERKOOPPRIJS"), max: bedrijventerrein.get("MAX_VERKOOPPRIJS") },
-            erfpachtprijs: { min: bedrijventerrein.get("MIN_ERFPACHTPRIJS"), max: bedrijventerrein.get("MAX_ERFPACHTPRIJS") }
-        });
-        this.updateGrid(this.stores.mutaties, {
-            gemeente: { datum: bedrijventerrein.get("MUTATIEDATUM_GEMEENTE"), bewerker: bedrijventerrein.get("MUT_GEMEENTE_DOOR") },
-            provincie: { datum: bedrijventerrein.get("MUTATIEDATUM_PROVINCIE"), bewerker: bedrijventerrein.get("MUT_PROVINCIE_DOOR") }
-        });
-        var bereikbaarheidValues = {
-            'ontsluiting_spoor': bedrijventerrein.get("SPOOR_ONTSLUITING_CODE"),
-            'ontsluiting_water': bedrijventerrein.get("WATER_ONTSLUITING_CODE"),
-            'externe_bereikbaarheid': bedrijventerrein.get("EXT_BEREIKBAARHEID_CODE"),
-            'parkeergelegenheid': bedrijventerrein.get("PARKEERGELEGENHED_CODE"),
-            'verouderd': bedrijventerrein.get("IND_VEROUDERD"),
-            'brute_ha_verouderd': bedrijventerrein.get("BRUTO_OPP_VEROUDERD") || '',
-            'hoofdoorzaak_veroudering': bedrijventerrein.get("HOOFDOORZAAK_VEROUD_CODE"),
-            'herstructereringsplan': bedrijventerrein.get("HERSTRUCT_PLAN_TYPE_CODE"),
-            'herstructereringsfase': bedrijventerrein.get("HERSTRUCT_FASE_CODE"),
-            'opp_facelift': bedrijventerrein.get("OPP_FACELIFT") || '',
-            'opp_revitalisatie': bedrijventerrein.get("OPP_REVITALISATIE") || '',
-            'opp_zware_revitalisatie': bedrijventerrein.get("OPP_ZWARE_REVITALISATIE") || '',
-            'opp_herprofilering': bedrijventerrein.get("OPP_HERPROFILERING") || '',
-            'opp_transformatie': bedrijventerrein.get("OPP_TRANSFORMATIE") || ''
-        };
-        this.bereikbaarheidForm.getForm().setValues(bereikbaarheidValues);
-        this.oppervlakteForm.getForm().setValues({
-            'indicatie_vol': bedrijventerrein.get("IND_VOL")
-        });
-        this.updateGrid(this.stores.oppervlak, {
-            bruto: { oppervlak: bedrijventerrein.get("AFGESPR_AANBOD_OPP") },
-            netto: { oppervlak: bedrijventerrein.get("AFGESPR_NETTO_OPP") },
-            uitgegeven: { oppervlak: bedrijventerrein.get("UITGEGEVEN_OPP") },
-            // uitgifte_huidig_jaar: { oppervlak: bedrijventerrein.get() },
-            terugkoop: { oppervlak: bedrijventerrein.get("OPP_TERUGKOOP_GEMEENTE") }
-        });
-        this.updateGrid(this.stores.uitgeefbaar, {
-            terstond_uitgeefbaar: { overheid: bedrijventerrein.get("UITGEEFBAAR_OVERH_OPP"), particuler: bedrijventerrein.get("UITGEEFBAAR_PART_OPP") }
-            // niet_terstond_uitgeefbaar: { overheid: '', particuler: '' },
-            // grootsts_uitgeefbaar_deel: { overheid: '', particuler: '' }
-        });
-    },
     createForm: function() {
         this.form = Ext.create('Ext.tab.Panel', {
             flex: 1,
@@ -158,42 +101,14 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 padding: 10
             },
             bbar: [
-                { xtype: 'button', text: 'Opslaan & Volgende', itemId: 'next-button', scope: this, handler: function() { this.saveAndNext(); } },
+                '->',
+                { xtype: 'button', text: 'Opslaan', itemId: 'next-button', scope: this, handler: function() { this.save(); } },
                 { xtype: 'button', text: 'Annuleren' },
                 '-',
                 { xtype: 'button', text: 'Help' }
-            ],
-            listeners: {
-                scope: this,
-                tabchange: this.updateSaveButtonLabel
-            }
+            ]
         });
         return this.form;
-    },
-    getActiveTabIndex: function() {
-        this.form.getActiveTab();
-    },
-    saveAndNext: function() {
-        this.save();
-        var current = this.form.getActiveTab();
-        var next = current.nextSibling();
-        if (next === null) {
-            return;
-        }
-        this.form.setActiveTab(next);
-        this.updateSaveButtonLabel();
-    },
-    updateSaveButtonLabel: function() {
-        var current = this.form.getActiveTab();
-        var nextButton = this.getContentContainer().query('#next-button')[0];
-        if (current.nextSibling() === null) {
-            nextButton.setText('Opslaan');
-        } else {
-            nextButton.setText('Opslaan & Volgende');
-        }
-    },
-    save: function() {
-        // @TODO: implement save
     },
     createAlgemeenForm: function() {
         this.algemeenForm = Ext.create('Ext.form.Panel', {
@@ -210,24 +125,24 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 maxWidth: 500
             },
             items: [
-                { fieldLabel: "Kernnaam", name: 'kernnaam' },
-                { xtype: 'combobox', name: 'planfase', fieldLabel: "Planfase",  queryMode: 'local',
+                { fieldLabel: "Kernnaam", name: 'KERN_NAAM' },
+                { xtype: 'combobox', name: 'PLAN_FASE', fieldLabel: "Planfase",  queryMode: 'local',
                     store: this.stores.planfase, displayField: 'PLAN_FASE_NAAM', valueField: 'CODE' },
-                { xtype: 'combobox', name: 'terreinbeheerder', fieldLabel: "Terreinbeheerder", queryMode: 'local',
+                { xtype: 'combobox', name: 'GEM_CODE_CBS', fieldLabel: "Terreinbeheerder", queryMode: 'local',
                     store: this.stores.terreinbeheerder, displayField: 'GEMEENTE_NAAM', valueField: 'GEM_CODE_CBS' },
                 this.createColumnForm(
-                    { xtype: 'combobox', name: 'werklocatietype', fieldLabel: "Werklocatietype", queryMode: 'local',
+                    { xtype: 'combobox', name: 'WERKLOCATIE_TYPE_CODE', fieldLabel: "Werklocatietype", queryMode: 'local',
                         store: this.stores.werklocatietype, displayField: 'WERKLOCATIE_TYPE_OMSCHR', valueField: 'CODE' },
-                    { xtype: 'combobox', queryMode: 'local', name: 'park_management', fieldLabel: "Park management", store: this.stores.parkmanagement, grow: true }
+                    { xtype: 'combobox', queryMode: 'local', name: 'IND_PARK_MANAGEMENT', fieldLabel: "Park management", store: this.stores.parkmanagement, grow: true }
                 ),
                 this.createColumnForm(
-                    { xtype: 'combobox', queryMode: 'local', name: 'milieuzonering', fieldLabel: "Milieuzonering", store: this.stores.milieuzonering, grow: true },
-                    { xtype: 'combobox', queryMode: 'local', name: 'maximale_milieucategorie', fieldLabel: "Maximale milieucategorie", grow: true,
+                    { xtype: 'combobox', queryMode: 'local', name: 'IND_MILIEUZONERING', fieldLabel: "Milieuzonering", store: this.stores.milieuzonering, grow: true },
+                    { xtype: 'combobox', queryMode: 'local', name: 'MAX_MILIEYCATEGORIE_CODE', fieldLabel: "Maximale milieucategorie", grow: true,
                         store: this.stores.maximale_milieucategorie, displayField: 'MILIECATEGORIE_NAAM', valueField: 'CODE' }
                 ),
                 this.createColumnForm(
-                    { xtype: 'textfield', name: 'startjaar_uitgifte', fieldLabel: "Startjaar uitgifte" },
-                    { xtype: 'textfield', name: 'beoogd_jaar_uitgifte', fieldLabel: "Beoogd jaar niet terstond uitgeefbaar" }
+                    { xtype: 'textfield', name: 'START_JAAR', fieldLabel: "Startjaar uitgifte" },
+                    { xtype: 'textfield', name: 'JAAR_NIET_TERSTOND_UITG_GEM', fieldLabel: "Beoogd jaar niet terstond uitgeefbaar" }
                 ),
                 {
                     xtype: 'gridpanel',
@@ -261,7 +176,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                         { header: 'Door', dataIndex: 'bewerker', flex: 1 }
                     ]
                 },
-                { xtype: 'textarea', name: 'opmerkingen', grow: true, growMax: 300, growMin: 100, fieldLabel: 'Opmerkingen', labelAlign: 'top' }
+                { xtype: 'textarea', name: 'OPMERKING_TBV_IBIS', grow: true, growMax: 300, growMin: 100, fieldLabel: 'Opmerkingen', labelAlign: 'top' }
             ]
         });
         return this.algemeenForm;
@@ -281,27 +196,27 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 maxWidth: 500
             },
             items: [
-                { xtype: 'combobox', queryMode: 'local', name: 'ontsluiting_spoor', fieldLabel: 'Ontsluiting spoor',
+                { xtype: 'combobox', queryMode: 'local', name: 'SPOOR_ONTSLUITING_CODE', fieldLabel: 'Ontsluiting spoor',
                     store: this.stores.ontsluiting_spoor, displayField: 'SPOOR_ONTSLUITING_NAAM', valueField: 'CODE' },
-                { xtype: 'combobox', queryMode: 'local', name: 'ontsluiting_water', fieldLabel: 'Ontsluiting water',
+                { xtype: 'combobox', queryMode: 'local', name: 'WATER_ONTSLUITING_CODE', fieldLabel: 'Ontsluiting water',
                     store: this.stores.ontsluiting_water, displayField: 'WATER_ONTSLUITING_NAAM', valueField: 'CODE' },
-                { xtype: 'combobox', queryMode: 'local', name: 'externe_bereikbaarheid', fieldLabel: 'Externe bereikbaarheid',
+                { xtype: 'combobox', queryMode: 'local', name: 'EXT_BEREIKBAARHEID_CODE', fieldLabel: 'Externe bereikbaarheid',
                     store: this.stores.externe_bereikbaarheid, displayField: 'EXT_BEREIKBAARHEID_NAAM', valueField: 'CODE' },
-                { xtype: 'combobox', queryMode: 'local', name: 'parkeergelegenheid', fieldLabel: 'Parkeergelegenheid',
+                { xtype: 'combobox', queryMode: 'local', name: 'PARKEERGELEGENHED_CODE', fieldLabel: 'Parkeergelegenheid',
                     store: this.stores.parkeergelegenheid, displayField: 'PARKEERGELEGENHEID_NAAM', valueField: 'CODE' },
-                { xtype: 'combobox', queryMode: 'local', name: 'verouderd', fieldLabel: 'Verouderd', store: this.stores.verouderd, grow: true },
-                { xtype: 'combobox', queryMode: 'local', name: 'hoofdoorzaak_veroudering', fieldLabel: 'Hoofdoorzaak veroudering',
+                { xtype: 'combobox', queryMode: 'local', name: 'IND_VEROUDERD', fieldLabel: 'Verouderd', store: this.stores.verouderd, grow: true },
+                { xtype: 'combobox', queryMode: 'local', name: 'HOOFDOORZAAK_VEROUD_CODE', fieldLabel: 'Hoofdoorzaak veroudering',
                     store: this.stores.hoofdoorzaak_veroudering, displayField: 'HOOFDOORZAAK_VEROUD_NAAM', valueField: 'CODE' },
-                { fieldLabel: 'Bruto ha verouderd', name: 'bruto_ha_verouderd', value: '', maxWidth: 275 },
-                { xtype: 'combobox', queryMode: 'local', name: 'herstructereringsplan', fieldLabel: 'Herstructereringsplan',
+                { fieldLabel: 'Bruto ha verouderd', name: 'BRUTO_OPP_VEROUDERD', value: '', maxWidth: 275 },
+                { xtype: 'combobox', queryMode: 'local', name: 'HERSTRUCT_PLAN_TYPE_CODE', fieldLabel: 'Herstructereringsplan',
                     store: this.stores.herstructereringsplan, displayField: 'HERSTRUCT_PLAN_TYPE_NAAM', valueField: 'CODE' },
-                { xtype: 'combobox', queryMode: 'local', name: 'herstructereringsfase', fieldLabel: 'Herstructereringsfase',
+                { xtype: 'combobox', queryMode: 'local', name: 'HERSTRUCT_FASE_CODE', fieldLabel: 'Herstructereringsfase',
                     store: this.stores.herstructereringsfase, displayField: 'HERSTRUCT_FASE_NAAM', valueField: 'CODE' },
-                { fieldLabel: 'Facelift (ha)', name: 'opp_facelift', value: '', maxWidth: 275 },
-                { fieldLabel: 'Revitalisatie (ha)', name: 'opp_revitalisatie', value: '', maxWidth: 275 },
-                { fieldLabel: 'Zware revitalisatie (ha)', name: 'opp_zware_revitalisatie', value: '', maxWidth: 275 },
-                { fieldLabel: 'Herprofilering (ha)', name: 'opp_herprofilering', value: '', maxWidth: 275 },
-                { fieldLabel: 'Transformatie (ha)', name: 'opp_transformatie', value: '', maxWidth: 275 }
+                { fieldLabel: 'Facelift (ha)', name: 'OPP_FACELIFT', value: '', maxWidth: 275 },
+                { fieldLabel: 'Revitalisatie (ha)', name: 'OPP_REVITALISATIE', value: '', maxWidth: 275 },
+                { fieldLabel: 'Zware revitalisatie (ha)', name: 'OPP_ZWARE_REVITALISATIE', value: '', maxWidth: 275 },
+                { fieldLabel: 'Herprofilering (ha)', name: 'OPP_HERPROFILERING', value: '', maxWidth: 275 },
+                { fieldLabel: 'Transformatie (ha)', name: 'OPP_TRANSFORMATIE', value: '', maxWidth: 275 }
             ]
         });
         return this.bereikbaarheidForm;
@@ -321,7 +236,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 maxWidth: 500
             },
             items: [
-                { xtype: 'combobox', queryMode: 'local', name: 'indicatie_vol', fieldLabel: 'Vol', disabled: true, store: this.stores.indicatie_vol },
+                { xtype: 'combobox', queryMode: 'local', name: 'IND_VOL', fieldLabel: 'Vol', disabled: true, store: this.stores.indicatie_vol },
                 {
                     xtype: 'gridpanel',
                     viewConfig:{
@@ -336,7 +251,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     selModel: 'cellmodel',
                     columns: [
                         { header: '', dataIndex: 'label', flex: 1 },
-                        { header: 'Oppervlak', dataIndex: 'oppervlak', editor: 'textfield', flex: 1, align: 'end' },
+                        { header: 'Oppervlak', dataIndex: 'oppervlak', editor: 'textfield', flex: 1, align: 'end' }
                     ],
                     margin: '0 0 10 0'
                 },
@@ -360,13 +275,19 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         return this.oppervlakteForm;
     },
     createFilterContainer: function() {
-        var container = Ext.create('Ext.container.Container', {
+        var container = Ext.create('Ext.panel.Panel', {
             width: '20%',
+            plain: true,
+            border: 0,
             minWidth: 200,
-            padding: 10,
             layout: {
                 type: 'vbox',
                 align: 'stretch'
+            },
+            bodyPadding: '0 0 10 0',
+            bodyStyle: { borderWidth: '0 0 0 0' },
+            defaults: {
+                padding: '0 10 0 10'
             },
             items: [
                 {
@@ -418,7 +339,15 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                         }
                     }
                 }
-            ]
+            ],
+            dockedItems: [{
+                xtype: 'toolbar',
+                dock: 'bottom',
+                style: 'border-width: 1px 0 1px 1px !important;',
+                items: [
+                    { xtype: 'button', text: 'Indienen', flex: 1, scope: this, handler: this.submit() }
+                ]
+            }]
         });
         return container;
     },
@@ -454,12 +383,6 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     },
     createLabel: function(str) {
         return { xtype: 'container', html: str };
-    },
-    defineModels: function() {
-        Ext.define('Classificatie', {
-            extend: 'Ext.data.Model',
-            fields: ['CLS_ID', 'CLASSIFICATIE']
-        });
     },
     createStores: function() {
         var gemeenteStore = this.createDefaultMobAjaxStore('Bedrijventerreinen.model.Gemeenten', "GEMEENTEN");
@@ -565,6 +488,68 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             store.load();
         }
         return store;
+    },
+    save: function() {
+    },
+    submit: function() {
+        // @TODO: implement submit
+    },
+    updateSelection: function(bedrijventerrein) {
+        this.bedrijventerrein = bedrijventerrein;
+        // this.form.setActiveTab(0);
+        var algemeenValues = {
+            'KERN_NAAM': bedrijventerrein.get("BEDRIJVENTERREIN").get("KERN_NAAM"),
+            'PLAN_FASE': bedrijventerrein.get("PLAN_FASE_CODE"),
+            'GEM_CODE_CBS': bedrijventerrein.get("GEM_CODE_CBS"),
+            'WERKLOCATIE_TYPE_CODE': bedrijventerrein.get("WERKLOCATIE_TYPE_CODE"),
+            'IND_PARK_MANAGEMENT': bedrijventerrein.get("IND_PARK_MANAGEMENT"),
+            'IND_MILIEUZONERING': bedrijventerrein.get("IND_MILIEUZONERING"),
+            'MAX_MILIEYCATEGORIE_CODE': bedrijventerrein.get("MAX_MILIEYCATEGORIE_CODE"),
+            'START_JAAR': bedrijventerrein.get("BEDRIJVENTERREIN").get("START_JAAR") || '',
+            'JAAR_NIET_TERSTOND_UITG_GEM': bedrijventerrein.get("JAAR_NIET_TERSTOND_UITG_GEM") || '',
+            'OPMERKING_TBV_IBIS': bedrijventerrein.get("OPMERKING_TBV_IBIS")
+        };
+        this.algemeenForm.getForm().setValues(algemeenValues);
+        this.updateGrid(this.stores.prijzen, {
+            verkoopprijs: { min: bedrijventerrein.get("MIN_VERKOOPPRIJS"), max: bedrijventerrein.get("MAX_VERKOOPPRIJS") },
+            erfpachtprijs: { min: bedrijventerrein.get("MIN_ERFPACHTPRIJS"), max: bedrijventerrein.get("MAX_ERFPACHTPRIJS") }
+        });
+        this.updateGrid(this.stores.mutaties, {
+            gemeente: { datum: bedrijventerrein.get("MUTATIEDATUM_GEMEENTE"), bewerker: bedrijventerrein.get("MUT_GEMEENTE_DOOR") },
+            provincie: { datum: bedrijventerrein.get("MUTATIEDATUM_PROVINCIE"), bewerker: bedrijventerrein.get("MUT_PROVINCIE_DOOR") }
+        });
+        var bereikbaarheidValues = {
+            'SPOOR_ONTSLUITING_CODE': bedrijventerrein.get("SPOOR_ONTSLUITING_CODE"),
+            'WATER_ONTSLUITING_CODE': bedrijventerrein.get("WATER_ONTSLUITING_CODE"),
+            'EXT_BEREIKBAARHEID_CODE': bedrijventerrein.get("EXT_BEREIKBAARHEID_CODE"),
+            'PARKEERGELEGENHED_CODE': bedrijventerrein.get("PARKEERGELEGENHED_CODE"),
+            'IND_VEROUDERD': bedrijventerrein.get("IND_VEROUDERD"),
+            'BRUTO_OPP_VEROUDERD': bedrijventerrein.get("BRUTO_OPP_VEROUDERD") || '',
+            'HOOFDOORZAAK_VEROUD_CODE': bedrijventerrein.get("HOOFDOORZAAK_VEROUD_CODE"),
+            'HERSTRUCT_PLAN_TYPE_CODE': bedrijventerrein.get("HERSTRUCT_PLAN_TYPE_CODE"),
+            'HERSTRUCT_FASE_CODE': bedrijventerrein.get("HERSTRUCT_FASE_CODE"),
+            'OPP_FACELIFT': bedrijventerrein.get("OPP_FACELIFT") || '',
+            'OPP_REVITALISATIE': bedrijventerrein.get("OPP_REVITALISATIE") || '',
+            'OPP_ZWARE_REVITALISATIE': bedrijventerrein.get("OPP_ZWARE_REVITALISATIE") || '',
+            'OPP_HERPROFILERING': bedrijventerrein.get("OPP_HERPROFILERING") || '',
+            'OPP_TRANSFORMATIE': bedrijventerrein.get("OPP_TRANSFORMATIE") || ''
+        };
+        this.bereikbaarheidForm.getForm().setValues(bereikbaarheidValues);
+        this.oppervlakteForm.getForm().setValues({
+            'IND_VOL': bedrijventerrein.get("IND_VOL")
+        });
+        this.updateGrid(this.stores.oppervlak, {
+            bruto: { oppervlak: bedrijventerrein.get("AFGESPR_AANBOD_OPP") },
+            netto: { oppervlak: bedrijventerrein.get("AFGESPR_NETTO_OPP") },
+            uitgegeven: { oppervlak: bedrijventerrein.get("UITGEGEVEN_OPP") },
+            // uitgifte_huidig_jaar: { oppervlak: bedrijventerrein.get() },
+            terugkoop: { oppervlak: bedrijventerrein.get("OPP_TERUGKOOP_GEMEENTE") }
+        });
+        this.updateGrid(this.stores.uitgeefbaar, {
+            terstond_uitgeefbaar: { overheid: bedrijventerrein.get("UITGEEFBAAR_OVERH_OPP"), particuler: bedrijventerrein.get("UITGEEFBAAR_PART_OPP") }
+            // niet_terstond_uitgeefbaar: { overheid: '', particuler: '' },
+            // grootsts_uitgeefbaar_deel: { overheid: '', particuler: '' }
+        });
     },
     updateGrid: function(store, updates) {
         var updated;
