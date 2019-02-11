@@ -117,23 +117,25 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         if (user.roles.hasOwnProperty("gemeente")) {
             f.MUT_GEMEENTE_DOOR = user.name ;
             f.MUTATIEDATUM_GEMEENTE = new Date();
+            f.MUTATIEDATUM_PROVINCIE = Ext.Date.parse(f.MUTATIEDATUM_PROVINCIE, 'd-m-Y H:i:s');
         }
 
         if (user.roles.hasOwnProperty("provincie")) {
             f.MUT_PROVINCIE_DOOR = user.name;
             f.MUTATIEDATUM_PROVINCIE = new Date();
+            f.MUTATIEDATUM_GEMEENTE = Ext.Date.parse(f.MUTATIEDATUM_GEMEENTE, 'd-m-Y H:i:s');
         }
         
-        f.MUTATIEDATUM_PROVINCIE = Ext.Date.format(new Date(f.MUTATIEDATUM_PROVINCIE), 'd-m-Y');
-        f.MUTATIEDATUM_GEMEENTE = Ext.Date.format(new Date(f.MUTATIEDATUM_GEMEENTE), 'd-m-Y');
         this.inputContainer.getForm().setValues(f);
     },
 
     newCorrection: function () {
+        this.reset();
+        this.resetForm();
         this.mode = "new";
-        this.vectorLayer.drawFeature("Polygon");
-       // var feat = Ext.create(viewer.viewercontroller.controller.Feature, {wktgeom: "POLYGON((223790 504638,228844 508832.16,232661.12 504585,229166 502918,223790 504638))"});
-        //this.vectorLayer.addFeatures([feat]);
+      //  this.vectorLayer.drawFeature("Polygon");
+       var feat = Ext.create(viewer.viewercontroller.controller.Feature, {wktgeom: "POLYGON((223790 504638,228844 508832.16,232661.12 504585,229166 502918,223790 504638))"});
+        this.vectorLayer.addFeatures([feat]);
     },
     reset: function () {
         this.vectorLayer.removeAllFeatures();
@@ -169,33 +171,27 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             items: [
                 {
                     xtype: 'container', layout: {type: 'hbox'}, defaults: {padding: '5px'}, items: [
-                        {xtype: 'combobox', flex: 2, labelAlign: 'top', name: 'CLASSIFICATIE_ID', fieldLabel: "Voorgestelde classificatie", displayField: "CLASSIFICATIE", valueField: "CLS_ID", store: this.stores.classificaties},
+                        {xtype: 'combobox', flex: 2, labelAlign: 'top', allowBlank:false, name: 'CLASSIFICATIE_ID', fieldLabel: "Voorgestelde classificatie", displayField: "CLASSIFICATIE", valueField: "CLS_ID", store: this.stores.classificaties},
                         {xtype: 'filefield', flex: 1, disabled: true, labelAlign: 'top', fieldLabel: "Upload", buttonOnly: true, buttonText: 'Upload shp-zip, pdf, ...', itemId: 'shp'}
                     ]
                 },
                 {
-                    xtype: "textarea", name: "TOELICHTING", fieldLabel: "Toelichting", padding: '5px', labelAlign: 'top', itemId: "toelichting", anchor: '100%', height: "200px",
-                    listeners: { afterrender: function(a,b,c){
-                            a.focus();
-                            var d = document.getElementById(a.inputId);
-                            setTimeout(function(){
-                                d.scrollTop = 99999;
-                            }, 10);
-                    },scope:this}
+                    xtype: "textarea", name: "TOELICHTING", fieldLabel: "Toelichting", allowBlank:false, padding: '5px', labelAlign: 'top', itemId: "toelichting", anchor: '100%', height: "200px",
+                    listeners: { afterrender: function(a){a.focus();var b = document.getElementById(a.inputId);setTimeout(function(){b.scrollTop = 99999;}, 10);},scope:this}
                 },
                 {
                     xtype: 'container', layout: {type: 'hbox'}, items: [
-                        {flex: 1, xtype: 'combobox', labelAlign: 'top', disabled: isGemeente, disabledCls:"", name: 'CORRECTIE_STATUS_ID', margin: '5px', padding: '5px', fieldLabel: "Status", displayField: "CORRECTIE_STATUS", valueField: "CS_ID", store: this.stores.statussen},
+                        {flex: 1, xtype: 'combobox', labelAlign: 'top', readOnly: isGemeente, name: 'CORRECTIE_STATUS_ID', margin: '5px', padding: '5px', fieldLabel: "Status", value: 1, displayField: "CORRECTIE_STATUS", valueField: "CS_ID", store: this.stores.statussen},
                         {flex: 2, xtype: 'container', layout: {type: 'hbox', pack: 'end'}, defaults: {margin: '5px', padding: '5px'}, items: [
-                                {xtype: 'textfield', editable:false, format: 'd-m-Y', altFormats: 'd-m-y|d-M-Y|d-M-Y|d-m-Y H:i:s', submitFormat: 'c', name: "MUTATIEDATUM_GEMEENTE", labelAlign: 'top', fieldLabel: 'Laatste wijziging gemeente', value: new Date(), itemId: 'datumLaatstGewijzigdGemeente'},
-                                {xtype: 'textfield', editable:false, name: "MUT_GEMEENTE_DOOR", labelAlign: 'top', fieldLabel: "Naam", itemId: 'naamLaatstGewijzigdGemeente'}]
+                                {xtype: 'datefield', readOnly:true, format: 'd-m-Y', submitFormat: 'c', name: "MUTATIEDATUM_GEMEENTE", labelAlign: 'top', fieldLabel: 'Laatste wijziging gemeente', value: isGemeente ? new Date() : "", itemId: 'datumLaatstGewijzigdGemeente'},
+                                {xtype: 'textfield', readOnly:true, name: "MUT_GEMEENTE_DOOR", labelAlign: 'top', value : isGemeente ? user.name : "", fieldLabel: "Naam", itemId: 'naamLaatstGewijzigdGemeente'}]
                         }
                     ]
                 },
                 {
                     xtype: 'container', layout: {type: 'hbox', pack: 'end'}, defaults: {margin: '5px', padding: '5px'}, items: [
-                        {xtype: 'textfield', editable:false, labelAlign: 'top', format: 'd-m-Y', altFormats: 'd-m-y|d-m-Y H:i:s', submitFormat: 'c', name: "MUTATIEDATUM_PROVINCIE", fieldLabel: 'Laatste wijziging provincie', value: new Date(), itemId: 'datumLaatstGewijzigdProvincie'},
-                        {xtype: 'textfield', editable:false, labelAlign: 'top', name: "MUT_PROVINCIE_DOOR", fieldLabel: "Naam", itemId: 'naamLaatstGewijzigdProvincie'}
+                        {xtype: 'datefield', readOnly:true,  labelAlign: 'top', format: 'd-m-Y', altFormats: 'd-m-y|d-m-Y H:i:s', submitFormat: 'c', name: "MUTATIEDATUM_PROVINCIE", fieldLabel: 'Laatste wijziging provincie', value: isGemeente ? "" : new Date(), itemId: 'datumLaatstGewijzigdProvincie'},
+                        {xtype: 'textfield', readOnly:true, labelAlign: 'top', name: "MUT_PROVINCIE_DOOR", fieldLabel: "Naam", value : isGemeente ? "" : user.name, itemId: 'naamLaatstGewijzigdProvincie'}
                     ]
                 }
             ],
