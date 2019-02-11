@@ -103,6 +103,9 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     },
 
     editCorrection: function (f) {
+        if(!f){
+            return;
+        }
         this.mode = "edit";
         this.currentFID = f.CV_ID;
 
@@ -114,7 +117,6 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         if (user.roles.hasOwnProperty("gemeente")) {
             f.MUT_GEMEENTE_DOOR = user.name ;
             f.MUTATIEDATUM_GEMEENTE = new Date();
-            f.CORRECTIE_STATUS_ID = this.getStatus(f.CORRECTIE_STATUS_ID);
         }
 
         if (user.roles.hasOwnProperty("provincie")) {
@@ -183,7 +185,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                 },
                 {
                     xtype: 'container', layout: {type: 'hbox'}, items: [
-                        {flex: 1, xtype: isGemeente ? 'textfield' :'combobox', labelAlign: 'top', editable: !isGemeente, name: 'CORRECTIE_STATUS_ID', margin: '5px', padding: '5px', fieldLabel: "Status", displayField: "CORRECTIE_STATUS", valueField: "CS_ID", store: this.stores.statussen},
+                        {flex: 1, xtype: 'combobox', labelAlign: 'top', disabled: isGemeente, disabledCls:"", name: 'CORRECTIE_STATUS_ID', margin: '5px', padding: '5px', fieldLabel: "Status", displayField: "CORRECTIE_STATUS", valueField: "CS_ID", store: this.stores.statussen},
                         {flex: 2, xtype: 'container', layout: {type: 'hbox', pack: 'end'}, defaults: {margin: '5px', padding: '5px'}, items: [
                                 {xtype: 'textfield', editable:false, format: 'd-m-Y', altFormats: 'd-m-y|d-M-Y|d-M-Y|d-m-Y H:i:s', submitFormat: 'c', name: "MUTATIEDATUM_GEMEENTE", labelAlign: 'top', fieldLabel: 'Laatste wijziging gemeente', value: new Date(), itemId: 'datumLaatstGewijzigdGemeente'},
                                 {xtype: 'textfield', editable:false, name: "MUT_GEMEENTE_DOOR", labelAlign: 'top', fieldLabel: "Naam", itemId: 'naamLaatstGewijzigdGemeente'}]
@@ -210,14 +212,6 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             ]
         });
         return this.inputContainer;
-    },
-    getStatus:function(statusId){
-        var match = this.stores.statussen.findBy(function(record,id){
-            if(record.get("CS_ID") === statusId){
-                return true;
-            }
-        });
-        return match !== -1 ? this.stores.statussen.getAt(match).get("CORRECTIE_STATUS") : "";
     },
     resetForm: function(){
         this.container.hide();
