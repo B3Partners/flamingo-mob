@@ -57,6 +57,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             this.container.show();
         }, this);
         this.geometryEditable = true;
+        this.config.allowDelete = true;
         this.appLayer = this.config.viewerController.getAppLayerById(this.config.layer);
         this.layerSelector = {};
         var me = this;
@@ -200,7 +201,18 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                         this.save();
                     }},
                 {xtype: 'button', text: 'Verwijderen', itemId: 'remove-button', scope: this, handler: function () {
-                        this.remove();
+                        Ext.MessageBox.show({
+                            title: 'Weet u het zeker?',
+                            message: 'Weet u zeker dat u wilt verwijderen?',
+                            buttons: Ext.Msg.YESNO,
+                            icon: Ext.Msg.QUESTION,
+                            scope: this,
+                            fn: function (btn) {
+                                if (btn === 'yes') {
+                                    this.remove();
+                                }
+                            }
+                        });
                     }},
                 {xtype: 'button', text: 'Annuleren', scope: this, handler: function () {
                         this.reset();
