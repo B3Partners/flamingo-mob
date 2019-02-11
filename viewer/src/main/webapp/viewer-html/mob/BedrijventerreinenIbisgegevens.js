@@ -14,6 +14,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+/* global Ext, actionBeans, FlamingoAppLoader */
+
 /**
  * Bedrijventerreinen component
  * @author <a href="mailto:geertplaisier@b3partners.nl">Geert Plaisier</a>
@@ -37,7 +39,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         details: {
             minWidth: 700,
             minHeight: 400,
-            useExtLayout: true,
+            useExtLayout: true
         }
     },
     constructor: function (conf) {
@@ -172,7 +174,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 ),
                 this.createColumnForm(
                     { xtype: 'combobox', editable: false, queryMode: 'local', name: 'IND_MILIEUZONERING', fieldLabel: "Milieuzonering", store: this.stores.milieuzonering, grow: true },
-                    { xtype: 'combobox', editable: false, queryMode: 'local', name: 'MAX_MILIEYCATEGORIE_CODE', fieldLabel: "Maximale milieucategorie", grow: true,
+                    { xtype: 'combobox', editable: false, queryMode: 'local', name: 'MAX_MILEUCATEGORIE_CODE', fieldLabel: "Maximale milieucategorie", grow: true,
                         store: this.stores.maximale_milieucategorie, displayField: 'MILIECATEGORIE_NAAM', valueField: 'CODE' }
                 ),
                 this.createColumnForm(
@@ -725,7 +727,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             'WERKLOCATIE_TYPE_CODE': bedrijventerrein.get("WERKLOCATIE_TYPE_CODE"),
             'IND_PARK_MANAGEMENT': bedrijventerrein.get("IND_PARK_MANAGEMENT"),
             'IND_MILIEUZONERING': bedrijventerrein.get("IND_MILIEUZONERING"),
-            'MAX_MILIEYCATEGORIE_CODE': bedrijventerrein.get("MAX_MILIEYCATEGORIE_CODE"),
+            'MAX_MILEUCATEGORIE_CODE': bedrijventerrein.get("MAX_MILEUCATEGORIE_CODE"),
             'START_JAAR': bedrijventerrein.get("BEDRIJVENTERREIN").get("START_JAAR") || '',
             'JAAR_NIET_TERSTOND_UITG_GEM': bedrijventerrein.get("JAAR_NIET_TERSTOND_UITG_GEM") || '',
             'OPMERKING_TBV_IBIS': bedrijventerrein.get("OPMERKING_TBV_IBIS")
@@ -781,6 +783,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         data = Ext.Object.merge({}, data, this.getGridValues(this.stores.prijzen, "verkoopprijs", { "min": "MIN_VERKOOPPRIJS", "max": "MAX_VERKOOPPRIJS" }));
         data = Ext.Object.merge({}, data, this.getGridValues(this.stores.prijzen, "erfpachtprijs", { "min": "MIN_ERFPACHTPRIJS", "max": "MAX_ERFPACHTPRIJS" }));
         data = Ext.Object.merge({}, data, this.getGridValues(this.stores.oppervlak, "terugkoop", { "oppervlak": "OPP_TERUGKOOP_GEMEENTE" }));
+        data["__fid"] = this.bedrijventerrein.data.BTM_ID;
         return data;
     },
     setDisabled: function(disabled) {

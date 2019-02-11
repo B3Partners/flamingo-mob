@@ -264,7 +264,8 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                 extraParams: {
                     application: FlamingoAppLoader.get('appId'),
                     featureTypeName: "CLASSIFICATIES",
-                    appLayer: this.layer
+                    appLayer: this.layer,
+                    sort:"VOLGORDENR"
                 },
                 type: 'ajax',
                 url: FlamingoAppLoader.get('contextPath') + '/action/mob/store',

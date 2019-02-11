@@ -39,7 +39,6 @@ import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.factory.GeoTools;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
-import org.geotools.filter.text.cql2.CQLException;
 import org.geotools.filter.text.ecql.ECQL;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -47,6 +46,8 @@ import org.opengis.feature.Property;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
+import org.opengis.filter.sort.SortBy;
+import org.opengis.filter.sort.SortOrder;
 import org.stripesstuff.stripersist.Stripersist;
 
 /**
@@ -77,6 +78,9 @@ public class MOBStoreActionBean extends LocalizableApplicationActionBean {
 
     @Validate(on="metingen")
     private Integer METING_ID;
+    
+    @Validate
+    private String sort;
     
     // <editor-fold defaultstate="collapsed" desc="getters and setters">
     @Override
@@ -136,6 +140,14 @@ public class MOBStoreActionBean extends LocalizableApplicationActionBean {
     public void setMETING_ID(Integer METING_ID) {
         this.METING_ID = METING_ID;
     }
+
+    public String getSort() {
+        return sort;
+    }
+
+    public void setSort(String sort) {
+        this.sort = sort;
+    }
     // </editor-fold>
     
     @DefaultHandler
@@ -183,12 +195,13 @@ public class MOBStoreActionBean extends LocalizableApplicationActionBean {
         try {
             org.geotools.data.FeatureSource source = sft.openGeoToolsFeatureSource();
             Filter ff = null;
+            Query q = new Query(fs.getName());
+            setSortBy(q, sort, null, CommonFactoryFinder.getFilterFactory2(GeoTools.getDefaultHints()));
             if (filter != null) {
                 ff = ECQL.toFilter(filter);
+                q.setFilter(ff);
             }
-            FeatureCollection fc = ff == null
-                ? source.getFeatures()
-                : source.getFeatures(ff);
+            FeatureCollection fc = source.getFeatures(q);
             FeatureIterator<SimpleFeature> it = null;
             JSONArray features = new JSONArray();
             response.put("features", features);
@@ -215,6 +228,15 @@ public class MOBStoreActionBean extends LocalizableApplicationActionBean {
         return new StreamingResolution("application/json", new StringReader(response.toString(4)));
     }
 
+    private void setSortBy(Query q,String sort, String dir, FilterFactory2 ff2 ){
+
+        if(sort != null) {
+            q.setSortBy(new SortBy[] {
+                ff2.sort(sort, "DESC".equals(dir) ? SortOrder.DESCENDING : SortOrder.ASCENDING)
+            });
+        }
+
+    }
     private JSONObject featureToJSON(SimpleFeature sf) {
         JSONObject obj = new JSONObject();
         Collection<Property> props = sf.getProperties();
