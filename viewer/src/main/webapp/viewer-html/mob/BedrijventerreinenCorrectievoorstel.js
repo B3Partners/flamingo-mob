@@ -64,6 +64,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             return me.appLayer;
         };
         this.createStores();
+        this.peildatum = "1-1-2018";
         // this.loadWindoww();
 
         this.toolMapClick.activateTool();
@@ -108,6 +109,21 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         var feat = Ext.create(viewer.viewercontroller.controller.Feature, {wktgeom: f.GEOMETRIE});
         this.vectorLayer.addFeatures([feat]);
         this.container.show();
+        
+        var user = FlamingoAppLoader.get("user");
+        if (user.roles.hasOwnProperty("gemeente")) {
+            f.MUT_GEMEENTE_DOOR = user.name ;
+            f.MUTATIEDATUM_GEMEENTE = new Date();
+            f.CORRECTIE_STATUS_ID = this.getStatus(f.CORRECTIE_STATUS_ID);
+        }
+
+        if (user.roles.hasOwnProperty("provincie")) {
+            f.MUT_PROVINCIE_DOOR = user.name;
+            f.MUTATIEDATUM_PROVINCIE = new Date();
+        }
+        
+        f.MUTATIEDATUM_PROVINCIE = Ext.Date.format(new Date(f.MUTATIEDATUM_PROVINCIE), 'd-m-Y');
+        f.MUTATIEDATUM_GEMEENTE = Ext.Date.format(new Date(f.MUTATIEDATUM_GEMEENTE), 'd-m-Y');
         this.inputContainer.getForm().setValues(f);
     },
 
@@ -130,6 +146,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                 align: 'stretch'
             },
             width: 600,
+            title: 'Correctievoorstel   - Peildatum ' + this.peildatum,
             closeAction: "hide",
             height: 600,
             padding: '5px',
@@ -142,22 +159,12 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         });
         this.createButtons();
     },
-    createForm: function () {
+    createForm: function () { 
+        var user = FlamingoAppLoader.get("user");
+        var isGemeente = user.roles.hasOwnProperty("gemeente");
         this.inputContainer = Ext.create('Ext.form.Panel', {
             flex: 1,
-            title: 'Correctievoorstel',
             items: [
-                {
-                    xtype: 'container', layout: {type: 'hbox', pack: "end"}, items: [
-                        {xtype: 'label', text: 'Peildatum: ', itemId: 'peildatumlabel'},
-                        {xtype: 'label', text: '1 juli 2018', itemId: 'peildatum'}
-                    ]
-                },
-                {
-                    xtype: 'container', layout: {type: 'hbox'}, defaults: {margin: '5px', padding: '5px'}, items: [
-                        {xtype: 'textfield', value: '', editable: true, itemId: 'gemeente'}
-                    ]
-                },
                 {
                     xtype: 'container', layout: {type: 'hbox'}, defaults: {padding: '5px'}, items: [
                         {xtype: 'combobox', flex: 2, labelAlign: 'top', name: 'CLASSIFICATIE_ID', fieldLabel: "Voorgestelde classificatie", displayField: "CLASSIFICATIE", valueField: "CLS_ID", store: this.stores.classificaties},
@@ -165,21 +172,28 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                     ]
                 },
                 {
-                    xtype: "textarea", name: "TOELICHTING", fieldLabel: "Toelichting", padding: '5px', labelAlign: 'top', itemId: "toelichting", anchor: '100%'
+                    xtype: "textarea", name: "TOELICHTING", fieldLabel: "Toelichting", padding: '5px', labelAlign: 'top', itemId: "toelichting", anchor: '100%', height: "200px",
+                    listeners: { afterrender: function(a,b,c){
+                            a.focus();
+                            var d = document.getElementById(a.inputId);
+                            setTimeout(function(){
+                                d.scrollTop = 99999;
+                            }, 10);
+                    },scope:this}
                 },
                 {
                     xtype: 'container', layout: {type: 'hbox'}, items: [
-                        {flex: 1, xtype: 'combobox', labelAlign: 'top', name: 'CORRECTIE_STATUS_ID', margin: '5px', padding: '5px', fieldLabel: "Status", displayField: "CORRECTIE_STATUS", valueField: "CS_ID", store: this.stores.statussen},
+                        {flex: 1, xtype: isGemeente ? 'textfield' :'combobox', labelAlign: 'top', editable: !isGemeente, name: 'CORRECTIE_STATUS_ID', margin: '5px', padding: '5px', fieldLabel: "Status", displayField: "CORRECTIE_STATUS", valueField: "CS_ID", store: this.stores.statussen},
                         {flex: 2, xtype: 'container', layout: {type: 'hbox', pack: 'end'}, defaults: {margin: '5px', padding: '5px'}, items: [
-                                {xtype: 'datefield', format: 'd-m-Y', altFormats: 'd-m-y|d-M-Y|d-M-Y|d-m-Y H:i:s', submitFormat: 'c', name: "MUTATIEDATUM_GEMEENTE", labelAlign: 'top', fieldLabel: 'Laatste wijziging gemeente', value: new Date(), itemId: 'datumLaatstGewijzigdGemeente'},
-                                {xtype: 'textfield', name: "MUT_GEMEENTE_DOOR", labelAlign: 'top', fieldLabel: "Naam", itemId: 'naamLaatstGewijzigdGemeente'}]
+                                {xtype: 'textfield', editable:false, format: 'd-m-Y', altFormats: 'd-m-y|d-M-Y|d-M-Y|d-m-Y H:i:s', submitFormat: 'c', name: "MUTATIEDATUM_GEMEENTE", labelAlign: 'top', fieldLabel: 'Laatste wijziging gemeente', value: new Date(), itemId: 'datumLaatstGewijzigdGemeente'},
+                                {xtype: 'textfield', editable:false, name: "MUT_GEMEENTE_DOOR", labelAlign: 'top', fieldLabel: "Naam", itemId: 'naamLaatstGewijzigdGemeente'}]
                         }
                     ]
                 },
                 {
                     xtype: 'container', layout: {type: 'hbox', pack: 'end'}, defaults: {margin: '5px', padding: '5px'}, items: [
-                        {xtype: 'datefield', labelAlign: 'top', format: 'd-m-Y', altFormats: 'd-m-y|d-m-Y H:i:s', submitFormat: 'c', name: "MUTATIEDATUM_PROVINCIE", fieldLabel: 'Laatste wijziging provincie', value: new Date(), itemId: 'datumLaatstGewijzigdProvincie'},
-                        {xtype: 'textfield', labelAlign: 'top', name: "MUT_PROVINCIE_DOOR", fieldLabel: "Naam", itemId: 'naamLaatstGewijzigdProvincie'}
+                        {xtype: 'textfield', editable:false, labelAlign: 'top', format: 'd-m-Y', altFormats: 'd-m-y|d-m-Y H:i:s', submitFormat: 'c', name: "MUTATIEDATUM_PROVINCIE", fieldLabel: 'Laatste wijziging provincie', value: new Date(), itemId: 'datumLaatstGewijzigdProvincie'},
+                        {xtype: 'textfield', editable:false, labelAlign: 'top', name: "MUT_PROVINCIE_DOOR", fieldLabel: "Naam", itemId: 'naamLaatstGewijzigdProvincie'}
                     ]
                 }
             ],
@@ -196,6 +210,14 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             ]
         });
         return this.inputContainer;
+    },
+    getStatus:function(statusId){
+        var match = this.stores.statussen.findBy(function(record,id){
+            if(record.get("CS_ID") === statusId){
+                return true;
+            }
+        });
+        return match !== -1 ? this.stores.statussen.getAt(match).get("CORRECTIE_STATUS") : "";
     },
     resetForm: function(){
         this.container.hide();
