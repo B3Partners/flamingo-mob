@@ -163,7 +163,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             items: [
                 { xtype: 'container', itemId: 'algemeen-errors' },
                 { fieldLabel: "Kernnaam", name: 'KERN_NAAM' },
-                { xtype: 'combobox', editable: false, name: 'PLAN_FASE', fieldLabel: "Planfase",  queryMode: 'local',
+                { xtype: 'combobox', editable: false, name: 'PLAN_FASE_CODE', fieldLabel: "Planfase",  queryMode: 'local',
                     store: this.stores.planfase, displayField: 'PLAN_FASE_NAAM', valueField: 'CODE' },
                 { xtype: 'combobox', editable: false, name: 'GEM_CODE_CBS', fieldLabel: "Terreinbeheerder", queryMode: 'local',
                     store: this.stores.terreinbeheerder, displayField: 'GEMEENTE_NAAM', valueField: 'GEM_CODE_CBS' },
@@ -731,7 +731,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         var bedrijventerrein = this.bedrijventerrein;
         var algemeenValues = {
             'KERN_NAAM': bedrijventerrein.get("BEDRIJVENTERREIN").get("KERN_NAAM"),
-            'PLAN_FASE': bedrijventerrein.get("PLAN_FASE_CODE"),
+            'PLAN_FASE_CODE': bedrijventerrein.get("PLAN_FASE_CODE"),
             'GEM_CODE_CBS': bedrijventerrein.get("GEM_CODE_CBS"),
             'WERKLOCATIE_TYPE_CODE': bedrijventerrein.get("WERKLOCATIE_TYPE_CODE"),
             'IND_PARK_MANAGEMENT': bedrijventerrein.get("IND_PARK_MANAGEMENT"),
