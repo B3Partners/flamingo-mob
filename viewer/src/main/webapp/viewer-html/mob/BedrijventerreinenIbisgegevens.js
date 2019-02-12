@@ -475,6 +475,8 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             'metingen',
             true
         );
+        var sorters = bedrijventerreinenMetingenStore.getSorters();
+        sorters.add("BEDRIJVENTERREIN_LABEL");
         bedrijventerreinenMetingenStore.on("load", function(store, records) {
             for(var i = 0; i < records.length; i++) {
                 var terrein = this.bedrijventerreinen.findRecord("RIN_NUMMER", records[i].get("RIN_NUMMER"));
@@ -653,8 +655,15 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             scope: this,
             success: function(result) {
                 var response = Ext.JSON.decode(result.responseText);
-                if(response.success) {
+                if (response.success) {
                     this.showEditing(false);
+                    this.stores.bedrijventerreinen.load();
+                    Ext.MessageBox.show({
+                        title: 'Gelukt',
+                        message: "Ibisgegvens opgeslagen",
+                        buttons: Ext.Msg.OK,
+                        icon: Ext.Msg.INFO
+                    });
                     // Update bedrijventerrein record
                 } else {
                     this.showErrorDialog(errorMessage);
