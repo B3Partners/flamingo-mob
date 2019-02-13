@@ -16,20 +16,34 @@
  */
 package nl.b3p.viewer.stripes;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import javax.persistence.EntityManager;
+import net.sourceforge.stripes.action.ErrorResolution;
+import net.sourceforge.stripes.action.FileBean;
 import net.sourceforge.stripes.action.Resolution;
+import net.sourceforge.stripes.action.StreamingResolution;
 import net.sourceforge.stripes.action.StrictBinding;
 import net.sourceforge.stripes.action.UrlBinding;
 import net.sourceforge.stripes.validation.Validate;
-import nl.b3p.viewer.config.app.Application;
 import nl.b3p.viewer.config.services.Layer;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geotools.data.DataAccess;
 import org.geotools.data.FeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
+import org.geotools.factory.CommonFactoryFinder;
+import org.geotools.factory.GeoTools;
+import org.geotools.feature.FeatureCollection;
+import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.NameImpl;
+import org.geotools.filter.identity.FeatureIdImpl;
 import org.json.JSONObject;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.filter.Filter;
+import org.opengis.filter.FilterFactory2;
 import org.stripesstuff.stripersist.Stripersist;
 
 /**
@@ -52,6 +66,12 @@ public class MOBEditActionBean extends EditFeatureActionBean{
     private String meting;
     
     private boolean overrideUserEditableMethod = false;
+    
+    @Validate
+    private FileBean UPLOAD;
+    
+    @Validate
+    private Integer CV_ID;
 
     // <editor-fold desc="Getters and setters" defaultstate="collapsed">
     public String getGEM_CODE_CBS() {
@@ -77,6 +97,23 @@ public class MOBEditActionBean extends EditFeatureActionBean{
     public void setMeting(String meting) {
         this.meting = meting;
     }
+
+    public FileBean getUPLOAD() {
+        return UPLOAD;
+    }
+
+    public void setUPLOAD(FileBean UPLOAD) {
+        this.UPLOAD = UPLOAD;
+    }
+
+    public Integer getCV_ID() {
+        return CV_ID;
+    }
+
+    public void setCV_ID(Integer CV_ID) {
+        this.CV_ID = CV_ID;
+    }
+
     // </editor-fold>
     
     public Resolution editFeature(){
@@ -87,8 +124,54 @@ public class MOBEditActionBean extends EditFeatureActionBean{
         
         // CORRECTIESTATUS
       //  Resolution r = saveRelatedFeatures();
-        
+        setFeature(meting);
         return edit();
+    }
+
+    public Resolution downloadAttachment() {
+        try {
+            EntityManager em = Stripersist.getEntityManager();
+            Layer l = getAppLayer().getService().getLayer(getAppLayer().getLayerName(), em);
+            
+            FeatureSource fs = l.getFeatureType().openGeoToolsFeatureSource();
+            FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2(GeoTools.getDefaultHints());
+            Filter f = ff.id(new FeatureIdImpl(CV_ID.toString()));
+            
+            FeatureCollection fc = fs.getFeatures(f);
+            FeatureIterator<SimpleFeature> it = fc.features();
+            SimpleFeature feature = null;
+            while (it.hasNext()) {
+                feature = it.next();
+            }
+            if(feature != null){
+                byte[] ar = (byte[])feature.getAttribute("UPLOAD");
+                String filename = (String)feature.getAttribute("BESTANDSNAAM");
+                String mimetype = (String) feature.getAttribute("MIMETYPE");
+                return new StreamingResolution(mimetype, new ByteArrayInputStream(ar)).setFilename(filename).setAttachment(true);
+            }else{
+                return new ErrorResolution(500, "Upload not found");
+            }
+        } catch (Exception ex) {
+            log.error("Cannot retrieve upload: ", ex);
+            return new ErrorResolution(500, "Cannot retrieve upload: " + ex.getLocalizedMessage());
+        }
+    }
+    
+    @Override
+    protected JSONObject getJsonFeature(String feature){
+        JSONObject f = new JSONObject(feature);
+        if (UPLOAD != null) {
+            
+            try(InputStream is = UPLOAD.getInputStream()) {
+                byte[] bytes = IOUtils.toByteArray(is);
+                f.put("UPLOAD", bytes);
+                f.put("BESTANDSNAAM",UPLOAD.getFileName());
+                f.put("MIMETYPE",UPLOAD.getContentType());
+            } catch (IOException ex) {
+                log.error("Cannot read upload: ", ex);
+            }
+        }
+        return f;
     }
     
     public Resolution saveIbis(){

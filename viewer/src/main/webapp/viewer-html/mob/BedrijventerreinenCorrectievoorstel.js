@@ -124,6 +124,9 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         }
         
         this.inputContainer.getForm().setValues(f);
+        if(user.roles.hasOwnProperty("provincie")){
+            this.inputContainer.query("#uploadContainer")[0].setVisible (f.hasOwnProperty("UPLOAD"));
+        }
     },
 
     newCorrection: function () {
@@ -163,13 +166,47 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     createForm: function () { 
         var user = FlamingoAppLoader.get("user");
         var isGemeente = user.roles.hasOwnProperty("gemeente");
+        
+        var fileField;
+        if(isGemeente){
+            fileField = {xtype: 'filefield', flex: 1, disabled: false, labelAlign: 'top', name:"UPLOAD", fieldLabel: "Upload", buttonOnly: true, 
+                buttonText: 'Upload shp-zip, pdf, ...', itemId: 'shp'};
+        }else{
+            fileField = {
+                xtype: "container",
+                itemId: "uploadContainer",
+                layout:{
+                    type:"vbox"
+                },
+                items: [
+                    {
+                        xtype:"label",
+                        text: 'Upload gemeente',
+                        padding: "6px"
+                    },
+                    {
+                        xtype: "button",
+                        text: "Download",
+                        width: "100%",
+                        listeners: {
+                            click: function () {
+                                var url = actionBeans["mobeditfeature"] + "?downloadAttachment=true&CV_ID=" + this.currentFID + "&appLayer=" + this.layer;
+                                window.open(url);
+                            },
+                            scope:this
+                        }
+                    }
+                ]
+            };
+        
+        }
         this.inputContainer = Ext.create('Ext.form.Panel', {
             flex: 1,
             items: [
                 {
                     xtype: 'container', layout: {type: 'hbox'}, defaults: {padding: '5px'}, items: [
                         {xtype: 'combobox', flex: 2, labelAlign: 'top', allowBlank:false, name: 'CLASSIFICATIE_ID', fieldLabel: "Voorgestelde classificatie", displayField: "CLASSIFICATIE", valueField: "CLS_ID", store: this.stores.classificaties},
-                        {xtype: 'filefield', flex: 1, disabled: true, labelAlign: 'top', fieldLabel: "Upload", buttonOnly: true, buttonText: 'Upload shp-zip, pdf, ...', itemId: 'shp'}
+                        fileField
                     ]
                 },
                 {
@@ -322,7 +359,32 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             }
         }
     },
-
+    save: function(){
+        var f =  this.inputContainer.getValues();
+        var feature = this.changeFeatureBeforeSave(f);
+        
+        if (this.vectorLayer.getActiveFeature()) {
+            var wkt = this.vectorLayer.getActiveFeature().config.wktgeom;
+            feature[this.appLayer.geometryAttribute] = wkt;
+        }
+        if (this.mode === "edit") {
+            feature.__fid = this.currentFID;
+        }
+        
+        this.inputContainer.submit({
+            url: actionBeans["mobeditfeature"] + "?editFeature=true",
+            waitMsg: 'Uploading your photo...',
+            params:{
+                meting: Ext.JSON.encode(feature),
+                application: this.config.viewerController.app.id,
+                appLayer: this.config.viewerController.getLayer(this.layerSelector.getValue()).getId()
+            },
+            success: this.saveSucces,
+            error: function(){
+                alert("error saving");
+            }
+        });
+    },
     changeFeatureBeforeSave: function (f) {
         f.AGM_ID = this.currentAGM_ID;
         
