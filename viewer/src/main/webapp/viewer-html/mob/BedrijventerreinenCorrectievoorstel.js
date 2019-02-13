@@ -115,15 +115,11 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.container.show();
         
         var user = FlamingoAppLoader.get("user");
-        if (user.roles.hasOwnProperty("gemeente")) {
-            f.MUT_GEMEENTE_DOOR = user.name ;
-            f.MUTATIEDATUM_GEMEENTE = new Date();
+        if(f.MUTATIEDATUM_PROVINCIE){
             f.MUTATIEDATUM_PROVINCIE = Ext.Date.parse(f.MUTATIEDATUM_PROVINCIE, 'd-m-Y H:i:s');
         }
 
-        if (user.roles.hasOwnProperty("provincie")) {
-            f.MUT_PROVINCIE_DOOR = user.name;
-            f.MUTATIEDATUM_PROVINCIE = new Date();
+        if (f.MUTATIEDATUM_GEMEENTE) {
             f.MUTATIEDATUM_GEMEENTE = Ext.Date.parse(f.MUTATIEDATUM_GEMEENTE, 'd-m-Y H:i:s');
         }
         
@@ -184,15 +180,15 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                     xtype: 'container', layout: {type: 'hbox'}, items: [
                         {flex: 1, xtype: 'combobox', labelAlign: 'top', readOnly: isGemeente, name: 'CORRECTIE_STATUS_ID', margin: '5px', padding: '5px', fieldLabel: "Status", value: 1, displayField: "CORRECTIE_STATUS", valueField: "CS_ID", store: this.stores.statussen},
                         {flex: 2, xtype: 'container', layout: {type: 'hbox', pack: 'end'}, defaults: {margin: '5px', padding: '5px'}, items: [
-                                {xtype: 'datefield', readOnly:true, format: 'd-m-Y', submitFormat: 'c', name: "MUTATIEDATUM_GEMEENTE", labelAlign: 'top', fieldLabel: 'Laatste wijziging gemeente', value: isGemeente ? new Date() : "", itemId: 'datumLaatstGewijzigdGemeente'},
-                                {xtype: 'textfield', readOnly:true, name: "MUT_GEMEENTE_DOOR", labelAlign: 'top', value : isGemeente ? user.name : "", fieldLabel: "Naam", itemId: 'naamLaatstGewijzigdGemeente'}]
+                                {xtype: 'datefield', readOnly:true, format: 'd-m-Y', submitFormat: 'c', name: "MUTATIEDATUM_GEMEENTE", labelAlign: 'top', fieldLabel: 'Laatste wijziging gemeente', itemId: 'datumLaatstGewijzigdGemeente'},
+                                {xtype: 'textfield', readOnly:true, name: "MUT_GEMEENTE_DOOR", labelAlign: 'top', fieldLabel: "Naam", itemId: 'naamLaatstGewijzigdGemeente'}]
                         }
                     ]
                 },
                 {
                     xtype: 'container', layout: {type: 'hbox', pack: 'end'}, defaults: {margin: '5px', padding: '5px'}, items: [
-                        {xtype: 'datefield', readOnly:true,  labelAlign: 'top', format: 'd-m-Y', altFormats: 'd-m-y|d-m-Y H:i:s', submitFormat: 'c', name: "MUTATIEDATUM_PROVINCIE", fieldLabel: 'Laatste wijziging provincie', value: isGemeente ? "" : new Date(), itemId: 'datumLaatstGewijzigdProvincie'},
-                        {xtype: 'textfield', readOnly:true, labelAlign: 'top', name: "MUT_PROVINCIE_DOOR", fieldLabel: "Naam", value : isGemeente ? "" : user.name, itemId: 'naamLaatstGewijzigdProvincie'}
+                        {xtype: 'datefield', readOnly:true,  labelAlign: 'top', format: 'd-m-Y', altFormats: 'd-m-y|d-m-Y H:i:s', submitFormat: 'c', name: "MUTATIEDATUM_PROVINCIE", fieldLabel: 'Laatste wijziging provincie', itemId: 'datumLaatstGewijzigdProvincie'},
+                        {xtype: 'textfield', readOnly:true, labelAlign: 'top', name: "MUT_PROVINCIE_DOOR", fieldLabel: "Naam", itemId: 'naamLaatstGewijzigdProvincie'}
                     ]
                 }
             ],
@@ -327,9 +323,21 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         }
     },
 
-    changeFeatureBeforeSave: function (feat) {
-        feat.AGM_ID = this.currentAGM_ID;
-        return feat;
+    changeFeatureBeforeSave: function (f) {
+        f.AGM_ID = this.currentAGM_ID;
+        
+        var user = FlamingoAppLoader.get("user");
+        if (user.roles.hasOwnProperty("gemeente")) {
+            f.MUT_GEMEENTE_DOOR = user.name ;
+            f.MUTATIEDATUM_GEMEENTE = new Date();
+        }
+
+        if (user.roles.hasOwnProperty("provincie")) {
+            f.MUT_PROVINCIE_DOOR = user.name;
+            f.MUTATIEDATUM_PROVINCIE = new Date();
+        }
+        
+        return f;
     },
     getEditFeature: function () {
         return Ext.create("viewer.EditFeature", {
