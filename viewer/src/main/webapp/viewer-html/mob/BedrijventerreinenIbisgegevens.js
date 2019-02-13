@@ -793,6 +793,13 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         data = Ext.Object.merge({}, data, this.getGridValues(this.stores.prijzen, "erfpachtprijs", { "min": "MIN_ERFPACHTPRIJS", "max": "MAX_ERFPACHTPRIJS" }));
         data = Ext.Object.merge({}, data, this.getGridValues(this.stores.oppervlak, "terugkoop", { "oppervlak": "OPP_TERUGKOOP_GEMEENTE" }));
         data["__fid"] = this.bedrijventerrein.data.BTM_ID;
+        var bedrijventerrein = {
+            __fid : this.bedrijventerrein.data.RIN_NUMMER,
+            START_JAAR : data.START_JAAR,
+            KERN_NAAM  : data.KERN_NAAM,
+            PLAN_NAAM  : this.bedrijventerrein.data.BEDRIJVENTERREIN_LABEL
+        };
+        data["BEDRIJVENTERREIN"] = bedrijventerrein;
         return data;
     },
     setDisabled: function(disabled) {

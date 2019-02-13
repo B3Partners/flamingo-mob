@@ -16,12 +16,21 @@
  */
 package nl.b3p.viewer.stripes;
 
+import javax.persistence.EntityManager;
 import net.sourceforge.stripes.action.Resolution;
 import net.sourceforge.stripes.action.StrictBinding;
 import net.sourceforge.stripes.action.UrlBinding;
 import net.sourceforge.stripes.validation.Validate;
 import nl.b3p.viewer.config.app.Application;
-import nl.b3p.viewer.config.app.ApplicationLayer;
+import nl.b3p.viewer.config.services.Layer;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.geotools.data.DataAccess;
+import org.geotools.data.FeatureSource;
+import org.geotools.data.simple.SimpleFeatureStore;
+import org.geotools.feature.NameImpl;
+import org.json.JSONObject;
+import org.stripesstuff.stripersist.Stripersist;
 
 /**
  *
@@ -30,19 +39,8 @@ import nl.b3p.viewer.config.app.ApplicationLayer;
 @UrlBinding("/action/mob/feature/edit")
 @StrictBinding
 public class MOBEditActionBean extends EditFeatureActionBean{
-    /*
-    application: FlamingoAppLoader.get('appId'),
-                appLayer: this.layer,
-                GEM_CODE_CBS: this.gemeente,
-                METING_ID: this.peildatum,
-                form: data,
-    */
-    
-    @Validate
-    private Application application;
-    
-    @Validate
-    private ApplicationLayer appLayer;
+
+    private static final Log log = LogFactory.getLog(MOBEditActionBean.class);
     
     @Validate
     private String GEM_CODE_CBS;
@@ -52,6 +50,8 @@ public class MOBEditActionBean extends EditFeatureActionBean{
     
     @Validate
     private String meting;
+    
+    private boolean overrideUserEditableMethod = false;
 
     // <editor-fold desc="Getters and setters" defaultstate="collapsed">
     public String getGEM_CODE_CBS() {
@@ -92,11 +92,41 @@ public class MOBEditActionBean extends EditFeatureActionBean{
     }
     
     public Resolution saveIbis(){
+        saveBedrijventerrein();
         setFeature(meting);
-        
-        //return new StreamingResolution("application/json", new StringReader(obj.toString(4)));
         return edit();
     }
     
+    private void saveBedrijventerrein(){
+        try {
+            EntityManager em = Stripersist.getEntityManager();
+            Layer l = getAppLayer().getService().getLayer(getAppLayer().getLayerName(), em);
+            
+            FeatureSource mainFs = l.getFeatureType().openGeoToolsFeatureSource();
+            DataAccess da = mainFs.getDataStore();
+            FeatureSource fs = da.getFeatureSource(new NameImpl("BEDRIJVENTERREINEN"));
+            
+            store = (SimpleFeatureStore)fs;
+            Layer prev = layer;
+            layer = l;
+            JSONObject orig = new JSONObject(meting);
+            JSONObject bedrijventerrein = orig.optJSONObject("BEDRIJVENTERREIN");
+            jsonFeature = bedrijventerrein;
+            overrideUserEditableMethod = true;
+            editFeature(bedrijventerrein.optString(FeatureInfoActionBean.FID));
+            layer = prev;
+            overrideUserEditableMethod = false;
+        } catch (Exception ex) {
+            log.error("Cannot save bedrijventerrein",ex);
+        }
+    }
     
+    @Override
+    protected boolean isAttributeUserEditingDisabled(String attrName) {
+        if(overrideUserEditableMethod){
+            return false;
+        }else{
+            return super.isAttributeUserEditingDisabled(attrName);
+        }
+    }
 }
