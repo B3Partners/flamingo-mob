@@ -792,6 +792,16 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         data = Ext.Object.merge({}, data, this.getGridValues(this.stores.prijzen, "verkoopprijs", { "min": "MIN_VERKOOPPRIJS", "max": "MAX_VERKOOPPRIJS" }));
         data = Ext.Object.merge({}, data, this.getGridValues(this.stores.prijzen, "erfpachtprijs", { "min": "MIN_ERFPACHTPRIJS", "max": "MAX_ERFPACHTPRIJS" }));
         data = Ext.Object.merge({}, data, this.getGridValues(this.stores.oppervlak, "terugkoop", { "oppervlak": "OPP_TERUGKOOP_GEMEENTE" }));
+        
+        var user = FlamingoAppLoader.get("user");
+        if (user.roles.hasOwnProperty("gemeente")) {
+            data["MUT_GEMEENTE_DOOR"] = user.name;
+            data["MUTATIEDATUM_GEMEENTE"] = new Date();
+        }
+        if (user.roles.hasOwnProperty("provincie")) {
+            data["MUT_PROVINCIE_DOOR"] = user.name;
+            data["MUTATIEDATUM_PROVINCIE"] = new Date();
+        }
         data["__fid"] = this.bedrijventerrein.data.BTM_ID;
         var bedrijventerrein = {
             __fid : this.bedrijventerrein.data.RIN_NUMMER,
