@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* global Ext */
+/* global Ext, actionBeans, FlamingoAppLoader */
 
 /**
  * Bedrijventerreinen base component
@@ -24,6 +24,15 @@
 Ext.define ("viewer.components.BedrijventerreinenBase", {
     singleton : true,
     modelsInitialized:false,
+    variablesInitialized:false,
+    
+    agm_id: null,
+    ibis_meting_id: null,
+    mob_meting_id: null,
+    gemeente: null,
+    peildatum_ibis: null,
+    peildatum_mob: null,
+    ag_id:null,    
     defineModels: function() {
         if(this.modelsInitialized){
             return;
@@ -207,5 +216,37 @@ Ext.define ("viewer.components.BedrijventerreinenBase", {
                 {name: 'EINDDATUM', type: 'date'}
             ]
         });
+    },
+    initializeEnvironmentVariables:function(layer, successFunction){
+        // agm_id
+        // meting id
+        // gemeente
+        // peildatum ibis
+        // peildatum mob
+        
+        // of voor huidige meting al correctievoorstellen zijn ingediend
+        // of voor huidige meting al uitgifte is ingediend
+        Ext.Ajax.request({
+            url: actionBeans["mobeditfeature"],
+            method: 'POST',
+            params: {
+                application: FlamingoAppLoader.get('appId'),
+                appLayer: layer,
+                retrieveVariables: true
+            },
+            scope: this,
+            success: function (result) {
+                var response = Ext.JSON.decode(result.responseText);
+                if (response.success) {
+                    successFunction(response);
+                } else {
+                    this.showErrorDialog("Kan benodigde variabelen niet ophalen.");
+                }
+            },
+            failure: function (result) {
+                this.showErrorDialog("Kan benodigde variabelen niet ophalen.");
+            }
+        });
+
     }
 });

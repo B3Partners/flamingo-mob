@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.util.Calendar;
 import javax.persistence.EntityManager;
 import net.sourceforge.stripes.action.ErrorResolution;
 import net.sourceforge.stripes.action.FileBean;
@@ -36,6 +37,7 @@ import org.geotools.data.DataAccess;
 import org.geotools.data.DefaultTransaction;
 import org.geotools.data.FeatureSource;
 import org.geotools.data.Transaction;
+import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.factory.GeoTools;
@@ -63,9 +65,6 @@ public class MOBEditActionBean extends EditFeatureActionBean {
     private static final Log log = LogFactory.getLog(MOBEditActionBean.class);
 
     @Validate
-    private String GEM_CODE_CBS;
-
-    @Validate
     private String METING_ID;
 
     @Validate
@@ -86,14 +85,6 @@ public class MOBEditActionBean extends EditFeatureActionBean {
     private Double uitgifte;
 
     // <editor-fold desc="Getters and setters" defaultstate="collapsed">
-    public String getGEM_CODE_CBS() {
-        return GEM_CODE_CBS;
-    }
-
-    public void setGEM_CODE_CBS(String GEM_CODE_CBS) {
-        this.GEM_CODE_CBS = GEM_CODE_CBS;
-    }
-
     public String getMETING_ID() {
         return METING_ID;
     }
@@ -154,6 +145,116 @@ public class MOBEditActionBean extends EditFeatureActionBean {
         return edit();
     }
 
+    public Resolution retrieveVariables() {
+        try {
+            JSONObject json = new JSONObject();
+            json.put("success", false);
+            EntityManager em = Stripersist.getEntityManager();
+            Layer l = getAppLayer().getService().getLayer(getAppLayer().getLayerName(), em);
+            FeatureSource mainFs = l.getFeatureType().openGeoToolsFeatureSource();
+            try {
+                DataAccess da = mainFs.getDataStore();
+                
+                String username = getContext().getRequest().getUserPrincipal().getName();
+                
+                FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2(GeoTools.getDefaultHints());
+                // afspraakgebieden
+                {
+                FeatureSource fs = da.getFeatureSource(new NameImpl("AFSPRAAKGEBIEDEN"));
+
+                SimpleFeatureStore d = (SimpleFeatureStore) fs;
+                Filter f = ECQL.toFilter("GEBRUIKERSNAAM = '" + username + "'");
+                SimpleFeatureCollection fc = d.getFeatures(f);
+                FeatureIterator<SimpleFeature> it = fc.features();
+                SimpleFeature feature = null;
+                while (it.hasNext()) {
+                    feature = it.next();
+                }
+                if(feature != null){
+                    json.put("GEM_CODE_CBS", feature.getAttribute("GEM_CODE_CBS"));
+                    json.put("AG_ID", feature.getAttribute("AG_ID"));
+                }
+            }
+                
+                // metingen
+                {
+                FeatureSource fs = da.getFeatureSource(new NameImpl("METINGEN"));
+                SimpleFeatureStore d = (SimpleFeatureStore) fs;
+                Calendar ibisNow = Calendar.getInstance();
+                ibisNow.set(Calendar.MONTH, 0);
+                ibisNow.set(Calendar.DAY_OF_MONTH, 1);
+                ibisNow.set(Calendar.HOUR, 0);
+                ibisNow.set(Calendar.MINUTE, 0);
+                ibisNow.set(Calendar.SECOND, 0);
+                ibisNow.set(Calendar.AM_PM, Calendar.AM);
+                
+                // peildatum ibis: 1 januari huidig jaar
+                Filter f = ff.equals(ff.property("PEILDATUM"), ff.literal(ibisNow.getTime())); //ECQL.toFilter("PEILDATUM = " + ibisNow);
+                SimpleFeatureCollection fc = d.getFeatures(f);
+                FeatureIterator<SimpleFeature> it = fc.features();
+                SimpleFeature feature = null;
+                while (it.hasNext()) {
+                    feature = it.next();
+                }
+                if(feature != null){
+                    json.put("IBIS_MTG_ID", feature.getAttribute("MTG_ID"));
+                    json.put("IBIS_PEILDATUM", feature.getAttribute("PEILDATUM"));
+                }
+                
+                // peildatum mob: 1 januari of 1 juli huidig jaar + indicatie vastgesteld
+                
+                Calendar mobNow = Calendar.getInstance();
+                mobNow.set(Calendar.MONTH, mobNow.get(Calendar.MONTH) > 6 ? 6 : 0);
+                mobNow.set(Calendar.DAY_OF_MONTH, 1);
+                mobNow.set(Calendar.HOUR, 0);
+                mobNow.set(Calendar.MINUTE, 0);
+                mobNow.set(Calendar.SECOND, 0);
+                mobNow.set(Calendar.AM_PM, Calendar.AM);
+                
+                // peildatum ibis: 1 januari huidig jaar
+                Filter mobFilter = ff.equals(ff.property("PEILDATUM"), ff.literal(mobNow.getTime()));
+                SimpleFeatureCollection mobFc = d.getFeatures(mobFilter);
+                FeatureIterator<SimpleFeature> mobIterator = mobFc.features();
+                SimpleFeature mobFeature = null;
+                while (mobIterator.hasNext()) {
+                    mobFeature = mobIterator.next();
+                }
+                if(mobFeature != null){
+                    json.put("MOB_MTG_ID", mobFeature.getAttribute("MTG_ID"));
+                    json.put("MOB_PEILDATUM", mobFeature.getAttribute("PEILDATUM"));
+                }
+            }
+                
+                // afspraakgeb_metingen
+                {
+                FeatureSource fs = da.getFeatureSource(new NameImpl("AFSPRAAKGEB_METINGEN"));
+
+                SimpleFeatureStore d = (SimpleFeatureStore) fs;
+                Filter f = ECQL.toFilter("METING_ID = " + json.get("MOB_MTG_ID")  + " AND AFSPRAAKGEBIED_ID = " + json.get("AG_ID"));
+                SimpleFeatureCollection fc = d.getFeatures(f);
+                FeatureIterator<SimpleFeature> it = fc.features();
+                SimpleFeature feature = null;
+                while (it.hasNext()) {
+                    feature = it.next();
+                }
+                if(feature != null){
+                    json.put("AGM_ID", feature.getAttribute("AGM_ID"));
+                }
+            }
+                json.put("success",true);
+                return new StreamingResolution("application/json", new StringReader(json.toString(4)));
+            } catch (Exception ex) {
+                log.error("Cannot submit ibis: ", ex);
+                return new ErrorResolution(500, "Kan ibisgegevens niet indienen " + ex.getLocalizedMessage());
+            }finally{
+                mainFs.getDataStore().dispose();
+            }
+        } catch (Exception ex) {
+            log.error("cannot get datastore: ", ex);
+            return new ErrorResolution(500, "Kan gegevens niet ophalen" + ex.getLocalizedMessage());
+        }
+    }
+    
     public Resolution submitExpectedAllotment() {
         try {
             JSONObject json = new JSONObject();

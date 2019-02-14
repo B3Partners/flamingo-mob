@@ -24,7 +24,6 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     stores: {},
     vectorLayer: null,
     appLayer: null,
-    currentAGM_ID: null,
     config: {
         layer: null
     },
@@ -32,11 +31,11 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         if (!Ext.isDefined(conf.showLabels)) {
             conf.showLabels = true;
         }
-        this.currentAGM_ID = 16;
         this.initConfig(conf);
         viewer.components.BedrijventerreinenCorrectievoorstel.superclass.constructor.call(this, this.config);
 
         viewer.components.BedrijventerreinenBase.defineModels();
+        
         this.vectorLayer = this.config.viewerController.mapComponent.createVectorLayer({
             name: this.config.name + 'VectorLayer',
             geometrytypes: ["Polygon"],
@@ -65,7 +64,6 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             return me.appLayer;
         };
         this.createStores();
-        this.peildatum = "1-1-2018";
         // this.loadWindoww();
 
         this.toolMapClick.activateTool();
@@ -142,15 +140,27 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.inputContainer.reset();
         this.mode = "";
     },
+    
+    loadWindow:function(){
+        var me = this;
+        viewer.components.BedrijventerreinenBase.initializeEnvironmentVariables(this.layer, function(response){
+            me.agm_id = response.AGM_ID;
+            me.ag_id = response.AG_ID;
+            me.mob_meting_id = response.MOB_MTG_ID;
+            me.gemeente = response.GEM_CODE_CBS;
+            me.peildatum_mob = response.MOB_PEILDATUM;
+            me.initComp();
+        });
+    },
 
-    loadWindow: function () {
+    initComp: function () {
         this.container = Ext.create('Ext.window.Window', {
             layout: {
                 type: 'hbox',
                 align: 'stretch'
             },
             width: 600,
-            title: 'Correctievoorstel   - Peildatum ' + this.peildatum,
+            title: 'Correctievoorstel   - Peildatum ' + this.peildatum_mob,
             closeAction: "hide",
             height: 600,
             padding: '5px',
@@ -331,7 +341,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                                                             params: {
                                                                 submitExpectedAllotment: true,
                                                                 uitgifte: allotment,
-                                                                AGM_ID: this.currentAGM_ID,
+                                                                AGM_ID: this.agm_id,
                                                                 appLayer: this.layer
                                                             },
                                                             success: function (result) {
@@ -381,7 +391,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                                     scope: this,
                                     params: {
                                         submitCorrections: true,
-                                        AGM_ID: this.currentAGM_ID,
+                                        AGM_ID: this.agm_id,
                                         appLayer: this.layer
                                     },
                                     success: function (result) {
@@ -491,7 +501,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         });
     },
     changeFeatureBeforeSave: function (f) {
-        f.AGM_ID = this.currentAGM_ID;
+        f.AGM_ID = this.agm_id;
         
         var user = FlamingoAppLoader.get("user");
         if (user.roles.hasOwnProperty("gemeente")) {
