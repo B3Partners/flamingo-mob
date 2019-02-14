@@ -20,8 +20,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.security.Principal;
 import java.util.Calendar;
 import javax.persistence.EntityManager;
+import javax.servlet.http.HttpServletRequest;
 import net.sourceforge.stripes.action.ErrorResolution;
 import net.sourceforge.stripes.action.FileBean;
 import net.sourceforge.stripes.action.Resolution;
@@ -80,7 +82,7 @@ public class MOBEditActionBean extends EditFeatureActionBean {
 
     @Validate
     private Integer AGM_ID;
-    
+
     @Validate
     private Double uitgifte;
 
@@ -133,9 +135,18 @@ public class MOBEditActionBean extends EditFeatureActionBean {
         this.uitgifte = uitgifte;
     }
     // </editor-fold>
-    
-    public Resolution editFeature() {
 
+    private boolean isAuthorized() {
+        HttpServletRequest req = getContext().getRequest();
+        Principal geb = req.getUserPrincipal();
+        return geb != null && (req.isUserInRole("gemeente") || req.isUserInRole("provincie"));
+    }
+
+    public Resolution editFeature() {
+        if (!isAuthorized()) {
+            log.error("Unauthorized access");
+            return new ErrorResolution(401, "Geen toegang");
+        }
         // @ToDo authorizations
         // create correctie status
         // set correctie_status_id on jsonfeature
@@ -146,6 +157,10 @@ public class MOBEditActionBean extends EditFeatureActionBean {
     }
 
     public Resolution retrieveVariables() {
+        if (!isAuthorized()) {
+            log.error("Unauthorized access");
+            return new ErrorResolution(401, "Geen toegang");
+        }
         try {
             JSONObject json = new JSONObject();
             json.put("success", false);
@@ -154,102 +169,101 @@ public class MOBEditActionBean extends EditFeatureActionBean {
             FeatureSource mainFs = l.getFeatureType().openGeoToolsFeatureSource();
             try {
                 DataAccess da = mainFs.getDataStore();
-                
+
                 String username = getContext().getRequest().getUserPrincipal().getName();
-                
+
                 FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2(GeoTools.getDefaultHints());
                 // afspraakgebieden
                 {
-                FeatureSource fs = da.getFeatureSource(new NameImpl("AFSPRAAKGEBIEDEN"));
+                    FeatureSource fs = da.getFeatureSource(new NameImpl("AFSPRAAKGEBIEDEN"));
 
-                SimpleFeatureStore d = (SimpleFeatureStore) fs;
-                Filter f = ECQL.toFilter("GEBRUIKERSNAAM = '" + username + "'");
-                SimpleFeatureCollection fc = d.getFeatures(f);
-                FeatureIterator<SimpleFeature> it = fc.features();
-                SimpleFeature feature = null;
-                while (it.hasNext()) {
-                    feature = it.next();
+                    SimpleFeatureStore d = (SimpleFeatureStore) fs;
+                    Filter f = ECQL.toFilter("GEBRUIKERSNAAM = '" + username + "'");
+                    SimpleFeatureCollection fc = d.getFeatures(f);
+                    FeatureIterator<SimpleFeature> it = fc.features();
+                    SimpleFeature feature = null;
+                    while (it.hasNext()) {
+                        feature = it.next();
+                    }
+                    if (feature != null) {
+                        json.put("GEM_CODE_CBS", feature.getAttribute("GEM_CODE_CBS"));
+                        json.put("AG_ID", feature.getAttribute("AG_ID"));
+                    }
                 }
-                if(feature != null){
-                    json.put("GEM_CODE_CBS", feature.getAttribute("GEM_CODE_CBS"));
-                    json.put("AG_ID", feature.getAttribute("AG_ID"));
-                }
-            }
-                
+
                 // metingen
                 {
-                FeatureSource fs = da.getFeatureSource(new NameImpl("METINGEN"));
-                SimpleFeatureStore d = (SimpleFeatureStore) fs;
-                Calendar ibisNow = Calendar.getInstance();
-                ibisNow.set(Calendar.MONTH, 0);
-                ibisNow.set(Calendar.DAY_OF_MONTH, 1);
-                ibisNow.set(Calendar.HOUR, 0);
-                ibisNow.set(Calendar.MINUTE, 0);
-                ibisNow.set(Calendar.SECOND, 0);
-                ibisNow.set(Calendar.AM_PM, Calendar.AM);
-                
-                // peildatum ibis: 1 januari huidig jaar
-                Filter f = ff.equals(ff.property("PEILDATUM"), ff.literal(ibisNow.getTime())); //ECQL.toFilter("PEILDATUM = " + ibisNow);
-                SimpleFeatureCollection fc = d.getFeatures(f);
-                FeatureIterator<SimpleFeature> it = fc.features();
-                SimpleFeature feature = null;
-                while (it.hasNext()) {
-                    feature = it.next();
+                    FeatureSource fs = da.getFeatureSource(new NameImpl("METINGEN"));
+                    SimpleFeatureStore d = (SimpleFeatureStore) fs;
+                    Calendar ibisNow = Calendar.getInstance();
+                    ibisNow.set(Calendar.MONTH, 0);
+                    ibisNow.set(Calendar.DAY_OF_MONTH, 1);
+                    ibisNow.set(Calendar.HOUR, 0);
+                    ibisNow.set(Calendar.MINUTE, 0);
+                    ibisNow.set(Calendar.SECOND, 0);
+                    ibisNow.set(Calendar.AM_PM, Calendar.AM);
+
+                    // peildatum ibis: 1 januari huidig jaar
+                    Filter f = ff.equals(ff.property("PEILDATUM"), ff.literal(ibisNow.getTime())); //ECQL.toFilter("PEILDATUM = " + ibisNow);
+                    SimpleFeatureCollection fc = d.getFeatures(f);
+                    FeatureIterator<SimpleFeature> it = fc.features();
+                    SimpleFeature feature = null;
+                    while (it.hasNext()) {
+                        feature = it.next();
+                    }
+                    if (feature != null) {
+                        json.put("IBIS_MTG_ID", feature.getAttribute("MTG_ID"));
+                        json.put("IBIS_PEILDATUM", feature.getAttribute("PEILDATUM"));
+                    }
+
+                    // peildatum mob: 1 januari of 1 juli huidig jaar + indicatie vastgesteld
+                    Calendar mobNow = Calendar.getInstance();
+                    mobNow.set(Calendar.MONTH, mobNow.get(Calendar.MONTH) > 6 ? 6 : 0);
+                    mobNow.set(Calendar.DAY_OF_MONTH, 1);
+                    mobNow.set(Calendar.HOUR, 0);
+                    mobNow.set(Calendar.MINUTE, 0);
+                    mobNow.set(Calendar.SECOND, 0);
+                    mobNow.set(Calendar.AM_PM, Calendar.AM);
+
+                    // peildatum ibis: 1 januari huidig jaar
+                    Filter mobFilter = ff.equals(ff.property("PEILDATUM"), ff.literal(mobNow.getTime()));
+                    SimpleFeatureCollection mobFc = d.getFeatures(mobFilter);
+                    FeatureIterator<SimpleFeature> mobIterator = mobFc.features();
+                    SimpleFeature mobFeature = null;
+                    while (mobIterator.hasNext()) {
+                        mobFeature = mobIterator.next();
+                    }
+                    if (mobFeature != null) {
+                        json.put("MOB_MTG_ID", mobFeature.getAttribute("MTG_ID"));
+                        json.put("MOB_PEILDATUM", mobFeature.getAttribute("PEILDATUM"));
+                    }
                 }
-                if(feature != null){
-                    json.put("IBIS_MTG_ID", feature.getAttribute("MTG_ID"));
-                    json.put("IBIS_PEILDATUM", feature.getAttribute("PEILDATUM"));
-                }
-                
-                // peildatum mob: 1 januari of 1 juli huidig jaar + indicatie vastgesteld
-                
-                Calendar mobNow = Calendar.getInstance();
-                mobNow.set(Calendar.MONTH, mobNow.get(Calendar.MONTH) > 6 ? 6 : 0);
-                mobNow.set(Calendar.DAY_OF_MONTH, 1);
-                mobNow.set(Calendar.HOUR, 0);
-                mobNow.set(Calendar.MINUTE, 0);
-                mobNow.set(Calendar.SECOND, 0);
-                mobNow.set(Calendar.AM_PM, Calendar.AM);
-                
-                // peildatum ibis: 1 januari huidig jaar
-                Filter mobFilter = ff.equals(ff.property("PEILDATUM"), ff.literal(mobNow.getTime()));
-                SimpleFeatureCollection mobFc = d.getFeatures(mobFilter);
-                FeatureIterator<SimpleFeature> mobIterator = mobFc.features();
-                SimpleFeature mobFeature = null;
-                while (mobIterator.hasNext()) {
-                    mobFeature = mobIterator.next();
-                }
-                if(mobFeature != null){
-                    json.put("MOB_MTG_ID", mobFeature.getAttribute("MTG_ID"));
-                    json.put("MOB_PEILDATUM", mobFeature.getAttribute("PEILDATUM"));
-                }
-            }
-                
+
                 // afspraakgeb_metingen
                 {
-                FeatureSource fs = da.getFeatureSource(new NameImpl("AFSPRAAKGEB_METINGEN"));
+                    FeatureSource fs = da.getFeatureSource(new NameImpl("AFSPRAAKGEB_METINGEN"));
 
-                SimpleFeatureStore d = (SimpleFeatureStore) fs;
-                Filter f = ECQL.toFilter("METING_ID = " + json.get("MOB_MTG_ID")  + " AND AFSPRAAKGEBIED_ID = " + json.get("AG_ID"));
-                SimpleFeatureCollection fc = d.getFeatures(f);
-                FeatureIterator<SimpleFeature> it = fc.features();
-                SimpleFeature feature = null;
-                while (it.hasNext()) {
-                    feature = it.next();
+                    SimpleFeatureStore d = (SimpleFeatureStore) fs;
+                    Filter f = ECQL.toFilter("METING_ID = " + json.get("MOB_MTG_ID") + " AND AFSPRAAKGEBIED_ID = " + json.get("AG_ID"));
+                    SimpleFeatureCollection fc = d.getFeatures(f);
+                    FeatureIterator<SimpleFeature> it = fc.features();
+                    SimpleFeature feature = null;
+                    while (it.hasNext()) {
+                        feature = it.next();
+                    }
+                    if (feature != null) {
+                        json.put("AGM_ID", feature.getAttribute("AGM_ID"));
+                        json.put("IND_IBIS_INGEDIEND_JN", feature.getAttribute("IND_IBIS_INGEDIEND_JN"));
+                        json.put("IND_CORRECTIES_INGEDIEND_JN", feature.getAttribute("IND_CORRECTIES_INGEDIEND_JN"));
+                        json.put("VERWACHTE_UITGIFTE", feature.getAttribute("VERWACHTE_UITGIFTE"));
+                    }
                 }
-                if(feature != null){
-                    json.put("AGM_ID", feature.getAttribute("AGM_ID"));
-                    json.put("IND_IBIS_INGEDIEND_JN", feature.getAttribute("IND_IBIS_INGEDIEND_JN"));
-                    json.put("IND_CORRECTIES_INGEDIEND_JN", feature.getAttribute("IND_CORRECTIES_INGEDIEND_JN"));
-                    json.put("VERWACHTE_UITGIFTE", feature.getAttribute("VERWACHTE_UITGIFTE"));
-                }
-            }
-                json.put("success",true);
+                json.put("success", true);
                 return new StreamingResolution("application/json", new StringReader(json.toString(4)));
             } catch (Exception ex) {
                 log.error("Cannot submit ibis: ", ex);
                 return new ErrorResolution(500, "Kan ibisgegevens niet indienen " + ex.getLocalizedMessage());
-            }finally{
+            } finally {
                 mainFs.getDataStore().dispose();
             }
         } catch (Exception ex) {
@@ -257,8 +271,12 @@ public class MOBEditActionBean extends EditFeatureActionBean {
             return new ErrorResolution(500, "Kan gegevens niet ophalen" + ex.getLocalizedMessage());
         }
     }
-    
+
     public Resolution submitExpectedAllotment() {
+        if (!isAuthorized()) {
+            log.error("Unauthorized access");
+            return new ErrorResolution(401, "Geen toegang");
+        }
         try {
             JSONObject json = new JSONObject();
             json.put("success", false);
@@ -294,6 +312,10 @@ public class MOBEditActionBean extends EditFeatureActionBean {
     }
 
     public Resolution submitIbis() {
+        if (!isAuthorized()) {
+            log.error("Unauthorized access");
+            return new ErrorResolution(401, "Geen toegang");
+        }
         try {
             JSONObject json = new JSONObject();
             json.put("success", false);
@@ -329,6 +351,10 @@ public class MOBEditActionBean extends EditFeatureActionBean {
     }
 
     public Resolution submitCorrections() {
+        if (!isAuthorized()) {
+            log.error("Unauthorized access");
+            return new ErrorResolution(401, "Geen toegang");
+        }
         try {
             JSONObject json = new JSONObject();
             json.put("success", false);
@@ -402,6 +428,10 @@ public class MOBEditActionBean extends EditFeatureActionBean {
     }
 
     public Resolution downloadAttachment() {
+        if (!isAuthorized()) {
+            log.error("Unauthorized access");
+            return new ErrorResolution(401, "Geen toegang");
+        }
         try {
             EntityManager em = Stripersist.getEntityManager();
             Layer l = getAppLayer().getService().getLayer(getAppLayer().getLayerName(), em);
@@ -431,6 +461,10 @@ public class MOBEditActionBean extends EditFeatureActionBean {
     }
 
     public Resolution saveIbis() {
+        if (!isAuthorized()) {
+            log.error("Unauthorized access");
+            return new ErrorResolution(401, "Geen toegang");
+        }
         saveBedrijventerrein();
         setFeature(meting);
         return edit();

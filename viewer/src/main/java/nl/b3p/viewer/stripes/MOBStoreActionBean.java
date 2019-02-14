@@ -17,11 +17,14 @@
 package nl.b3p.viewer.stripes;
 
 import java.io.StringReader;
+import java.security.Principal;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 import javax.persistence.EntityManager;
+import javax.servlet.http.HttpServletRequest;
 import net.sourceforge.stripes.action.ActionBeanContext;
 import net.sourceforge.stripes.action.DefaultHandler;
+import net.sourceforge.stripes.action.ErrorResolution;
 import net.sourceforge.stripes.action.Resolution;
 import net.sourceforge.stripes.action.StreamingResolution;
 import net.sourceforge.stripes.action.StrictBinding;
@@ -150,16 +153,34 @@ public class MOBStoreActionBean extends LocalizableApplicationActionBean {
     }
     // </editor-fold>
     
+    private boolean isAuthorized() {
+        HttpServletRequest req = getContext().getRequest();
+        Principal geb = req.getUserPrincipal();
+        return geb != null && (req.isUserInRole("gemeente") || req.isUserInRole("provincie"));
+    }
+    
     @DefaultHandler
     public Resolution store() {
+        if (!isAuthorized()) {
+            log.error("Unauthorized access");
+            return new ErrorResolution(401, "Geen toegang");
+        }
         return readFeatures(featureTypeName, null);
     }
 
     public Resolution metingen() {
+        if (!isAuthorized()) {
+            log.error("Unauthorized access");
+            return new ErrorResolution(401, "Geen toegang");
+        }
         return readFeatures("BEDR_TERREIN_METINGEN", String.format("METING_ID = %d AND GEM_CODE_CBS = %d", METING_ID, GEM_CODE_CBS));
     }
 
     private Resolution readFeatures(String featureTypeName, String filter) {
+        if (!isAuthorized()) {
+            log.error("Unauthorized access");
+            return new ErrorResolution(401, "Geen toegang");
+        }
         String error;
 
         JSONObject response = new JSONObject();
