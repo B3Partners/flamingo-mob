@@ -64,8 +64,6 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             return me.appLayer;
         };
         this.createStores();
-        // this.loadWindoww();
-
         this.toolMapClick.activateTool();
         return this;
     },
@@ -76,7 +74,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         // this.showMobilePopup();
         //  Ext.get(this.getContentDiv()).mask("Haalt features op...");
         var coords = comp.coord;
-        this.config.viewerController.mapComponent.getMap().setMarker("edit", coords.x, coords.y);
+        this.config.viewerController.mapComponent.getMap().setMarker("correctievoorstel", coords.x, coords.y);
         this.getFeaturesForCoords(coords);
     },
     getFeaturesForCoords: function (coords) {
@@ -131,14 +129,15 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.reset();
         this.resetForm();
         this.mode = "new";
-      //  this.vectorLayer.drawFeature("Polygon");
-       var feat = Ext.create(viewer.viewercontroller.controller.Feature, {wktgeom: "POLYGON((223790 504638,228844 508832.16,232661.12 504585,229166 502918,223790 504638))"});
-        this.vectorLayer.addFeatures([feat]);
+        this.vectorLayer.drawFeature("Polygon");
+       //var feat = Ext.create(viewer.viewercontroller.controller.Feature, {wktgeom: "POLYGON((223790 504638,228844 508832.16,232661.12 504585,229166 502918,223790 504638))"});
+        //this.vectorLayer.addFeatures([feat]);
     },
     reset: function () {
         this.vectorLayer.removeAllFeatures();
         this.inputContainer.reset();
         this.mode = "";
+        this.config.viewerController.mapComponent.getMap().removeMarker("correctievoorstel");
     },
     
     loadWindow:function(){
@@ -149,6 +148,8 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             me.mob_meting_id = response.MOB_MTG_ID;
             me.gemeente = response.GEM_CODE_CBS;
             me.peildatum_mob = response.MOB_PEILDATUM;
+            me.ingediend = response.IND_CORRECTIES_INGEDIEND_JN === 'J';
+            me.uitgifteIngevuld = response.VERWACHTE_UITGIFTE !== null;
             me.initComp();
         });
     },
@@ -289,6 +290,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         }
         this.cvbutton = Ext.create('Ext.Button', {
             text: 'Correctievoorstel',
+            disabled: this.ingediend,
             listeners: {
                 scope: this,
                 click: this.newCorrection
@@ -297,6 +299,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
 
         this.vubutton = Ext.create('Ext.Button', {
             text: 'Verwachte uitgifte',
+            disabled: this.uitgifteIngevuld,
             listeners: {
                 scope: this,
                 click: function () {
@@ -489,6 +492,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.inputContainer.submit({
             url: actionBeans["mobeditfeature"] + "?editFeature=true",
             waitMsg: 'Correctievoorstel opslaan',
+            scope:this,
             params:{
                 meting: Ext.JSON.encode(feature),
                 application: this.config.viewerController.app.id,
@@ -524,6 +528,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     },
     saveSucces: function () {
         this.reset();
-        viewer.components.BedrijventerreinenCorrectievoorstel.superclass.saveSucces.call(this, this.config);
+        this.resetForm();
+        this.config.viewerController.getLayer(this.config.viewerController.getAppLayerById(this.layer)).reload();
     }
 });

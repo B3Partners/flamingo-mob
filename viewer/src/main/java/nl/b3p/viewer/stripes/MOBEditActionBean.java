@@ -239,6 +239,9 @@ public class MOBEditActionBean extends EditFeatureActionBean {
                 }
                 if(feature != null){
                     json.put("AGM_ID", feature.getAttribute("AGM_ID"));
+                    json.put("IND_IBIS_INGEDIEND_JN", feature.getAttribute("IND_IBIS_INGEDIEND_JN"));
+                    json.put("IND_CORRECTIES_INGEDIEND_JN", feature.getAttribute("IND_CORRECTIES_INGEDIEND_JN"));
+                    json.put("VERWACHTE_UITGIFTE", feature.getAttribute("VERWACHTE_UITGIFTE"));
                 }
             }
                 json.put("success",true);
