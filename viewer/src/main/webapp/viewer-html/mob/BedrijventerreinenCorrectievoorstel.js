@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* global Ext, FlamingoAppLoader, actionBeans */
+/* global Ext, FlamingoAppLoader, actionBeans, i18next */
 
 Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     extend: "viewer.components.Edit",
@@ -294,8 +294,41 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
 
         this.indienbutton = Ext.create('Ext.Button', {
             text: 'Indienen',
-            handler: function () {
-                alert('You clicked the indienen button!');
+            listeners: {
+                click: function () {
+                    Ext.MessageBox.show({
+                        title: 'Weet u het zeker?',
+                        message: 'Weet u zeker dat u alle opgeslagen correctievoorstellen wilt indienen?',
+                        buttons: Ext.Msg.YESNO,
+                        icon: Ext.Msg.QUESTION,
+                        scope: this,
+                        fn: function (btn) {
+                            if (btn === 'yes') {
+                                Ext.Ajax.request({
+                                    url: actionBeans["mobeditfeature"],
+                                    scope: this,
+                                    params: {
+                                        submitCorrections: true,
+                                        AGM_ID: this.currentAGM_ID,
+                                        appLayer: this.layer
+                                    },
+                                    success: function (result) {
+                                        var response = Ext.JSON.decode(result.responseText);
+                                        if (response.success) {
+                                            Ext.MessageBox.alert(i18next.t('viewer_components_edit_40'),"Correctievoorstellen ingediend.");
+                                        } else {
+                                            Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de correctievoorstellen is mislukt. " + response.message);
+                                        }
+                                    },
+                                    failure: function (result) {
+                                        Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de correctievoorstellen is mislukt. " + result.message);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                },
+                scope: this
             }
         });
         this.buttonContainer.add(this.cvbutton);
@@ -373,7 +406,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         
         this.inputContainer.submit({
             url: actionBeans["mobeditfeature"] + "?editFeature=true",
-            waitMsg: 'Uploading your photo...',
+            waitMsg: 'Correctievoorstel opslaan',
             params:{
                 meting: Ext.JSON.encode(feature),
                 application: this.config.viewerController.app.id,
