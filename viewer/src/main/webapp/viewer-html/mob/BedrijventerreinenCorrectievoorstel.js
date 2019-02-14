@@ -287,8 +287,80 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
 
         this.vubutton = Ext.create('Ext.Button', {
             text: 'Verwachte uitgifte',
-            handler: function () {
-                alert('You clicked the verwachte uitgifte button!');
+            listeners: {
+                scope: this,
+                click: function () {
+                    var uitgifteWindow = Ext.create('Ext.window.Window', {
+                        title: 'Invoeren verwachte uitgifte',
+                        height: 200,
+                        modal:true,
+                        width: 400,
+                        items: [
+                            {
+                                xtype: 'label',
+                                text: 'Hier komt een tekst'
+                            },
+                            {
+                                xtype: 'numberfield',
+                                fieldLabel:'Verwachte uitgifte (hectare)',
+                                itemId: 'uitgifte',
+                                labelWidth: 200
+                            }
+                        ],
+                        bbar: [
+                            {
+                                xtype: 'button',
+                                text: 'Opslaan',
+                                itemId: 'save-button',
+                                listeners: {
+                                    scope: this,
+                                    click: function (btn) {
+                                        var allotment = btn.ownerCt.ownerCt.query("#uitgifte")[0].getValue();
+                                        if (allotment) {
+                                            Ext.MessageBox.show({
+                                                title: 'Weet u het zeker?',
+                                                message: 'Weet u zeker dat u de verwachte uitgifte wilt indienen?',
+                                                buttons: Ext.Msg.YESNO,
+                                                icon: Ext.Msg.QUESTION,
+                                                scope: this,
+                                                fn: function (btn) {
+                                                    if (btn === 'yes') {
+                                                        Ext.Ajax.request({
+                                                            url: actionBeans["mobeditfeature"],
+                                                            scope: this,
+                                                            params: {
+                                                                submitExpectedAllotment: true,
+                                                                uitgifte: allotment,
+                                                                AGM_ID: this.currentAGM_ID,
+                                                                appLayer: this.layer
+                                                            },
+                                                            success: function (result) {
+                                                                var response = Ext.JSON.decode(result.responseText);
+                                                                if (response.success) {
+                                                                    Ext.MessageBox.alert(i18next.t('viewer_components_edit_40'), "Verwachte uitgifte ingediend.");
+                                                                } else {
+                                                                    Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de verwachte uitgifte is mislukt. " + response.message);
+                                                                }
+                                                                uitgifteWindow.hide();
+                                                            },
+                                                            failure: function (result) {
+                                                                Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de verwachte uitgifte is mislukt. " + result.message);
+                                                                uitgifteWindow.hide();
+                                                            }
+                                                        });
+                                                    }
+                                                }
+                                            });
+                                        }else{
+                                            Ext.MessageBox.alert("Fout", "Hoeveelheid hectare is niet ingevuld.");
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    });
+                    uitgifteWindow.show()
+                }
             }
         });
 

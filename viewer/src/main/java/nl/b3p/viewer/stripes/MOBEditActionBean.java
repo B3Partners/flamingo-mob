@@ -81,6 +81,9 @@ public class MOBEditActionBean extends EditFeatureActionBean {
 
     @Validate
     private Integer AGM_ID;
+    
+    @Validate
+    private Double uitgifte;
 
     // <editor-fold desc="Getters and setters" defaultstate="collapsed">
     public String getGEM_CODE_CBS() {
@@ -130,6 +133,14 @@ public class MOBEditActionBean extends EditFeatureActionBean {
     public void setAGM_ID(Integer AGM_ID) {
         this.AGM_ID = AGM_ID;
     }
+
+    public Double getUitgifte() {
+        return uitgifte;
+    }
+
+    public void setUitgifte(Double uitgifte) {
+        this.uitgifte = uitgifte;
+    }
     // </editor-fold>
     
     public Resolution editFeature() {
@@ -141,6 +152,41 @@ public class MOBEditActionBean extends EditFeatureActionBean {
         //  Resolution r = saveRelatedFeatures();
         setFeature(meting);
         return edit();
+    }
+
+    public Resolution submitExpectedAllotment() {
+        try {
+            JSONObject json = new JSONObject();
+            json.put("success", false);
+            EntityManager em = Stripersist.getEntityManager();
+            Layer l = getAppLayer().getService().getLayer(getAppLayer().getLayerName(), em);
+            FeatureSource mainFs = l.getFeatureType().openGeoToolsFeatureSource();
+            DataAccess da = mainFs.getDataStore();
+            FeatureSource fs = da.getFeatureSource(new NameImpl("AFSPRAAKGEB_METINGEN"));
+
+            SimpleFeatureStore d = (SimpleFeatureStore) fs;
+
+            Transaction transaction = new DefaultTransaction("edit");
+            d.setTransaction(transaction);
+            try {
+                FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2(GeoTools.getDefaultHints());
+                Filter f = ff.id(new FeatureIdImpl(AGM_ID.toString()));
+                d.modifyFeatures("VERWACHTE_UITGIFTE", uitgifte, f);
+                transaction.commit();
+
+                json.put("success", true);
+            } catch (IOException | JSONException ex) {
+                log.error("Kan ibisgegevens niet indienen: ", ex);
+                transaction.rollback();
+                json.put("message", "Kan ibisgegevens niet indienen: " + ex.getLocalizedMessage());
+            } finally {
+                transaction.close();
+            }
+            return new StreamingResolution("application/json", new StringReader(json.toString(4)));
+        } catch (Exception ex) {
+            log.error("Cannot submit ibis: ", ex);
+            return new ErrorResolution(500, "Kan ibisgegevens niet indienen " + ex.getLocalizedMessage());
+        }
     }
 
     public Resolution submitIbis() {
