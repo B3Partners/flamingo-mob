@@ -30,6 +30,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     stores: {},
     storesLoading: 0,
     windowLoaded: false,
+    currentAGM_ID:null,
     config: {
         title: null,
         titlebarIcon: null,
@@ -49,6 +50,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         viewer.components.BedrijventerreinenBase.defineModels();
         this.bedrijventerreinen = this.createDefaultMobAjaxStore('Bedrijventerreinen.model.Bedrijventerreinen', "BEDRIJVENTERREINEN", "", true);
         this.loadWindow();
+        this.currentAGM_ID = 16;
         this.container.setLoading("Bezig met laden...");
         this.bedrijventerreinen.load({
             scope: this,
@@ -691,23 +693,28 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     submit: function() {
         var errorMessage = 'Het is helaas niet gelukt om in te dienen. Probeer het alstublieft opnieuw. Indien het probleem blijft bestaan, neem dan contact op met de beheerder van deze applicatie.';
         Ext.Ajax.request({
-            url: actionBeans["mobstore"],
+            url: actionBeans["mobeditfeature"],
             params: {
                 application: FlamingoAppLoader.get('appId'),
                 appLayer: this.layer,
                 GEM_CODE_CBS: this.gemeente,
-                METING_ID: this.peildatum,
-                submit: true
+                AGM_ID: this.currentAGM_ID,
+                submitIbis: true
             },
-            success: function(result) {
+            success: function (result) {
                 var response = Ext.JSON.decode(result.responseText);
-                if(response.success) {
-
+                if (response.success) {
+                    Ext.MessageBox.show({
+                        title: 'Gelukt',
+                        message: "Ibisgegvens ingediend.",
+                        buttons: Ext.Msg.OK,
+                        icon: Ext.Msg.INFO
+                    });
                 } else {
                     this.showErrorDialog(errorMessage);
                 }
             },
-            failure: function(result) {
+            failure: function (result) {
                 this.showErrorDialog(errorMessage);
             }
         });

@@ -130,8 +130,8 @@ public class MOBEditActionBean extends EditFeatureActionBean {
     public void setAGM_ID(Integer AGM_ID) {
         this.AGM_ID = AGM_ID;
     }
-
     // </editor-fold>
+    
     public Resolution editFeature() {
 
         // @ToDo authorizations
@@ -141,6 +141,41 @@ public class MOBEditActionBean extends EditFeatureActionBean {
         //  Resolution r = saveRelatedFeatures();
         setFeature(meting);
         return edit();
+    }
+
+    public Resolution submitIbis() {
+        try {
+            JSONObject json = new JSONObject();
+            json.put("success", false);
+            EntityManager em = Stripersist.getEntityManager();
+            Layer l = getAppLayer().getService().getLayer(getAppLayer().getLayerName(), em);
+            FeatureSource mainFs = l.getFeatureType().openGeoToolsFeatureSource();
+            DataAccess da = mainFs.getDataStore();
+            FeatureSource fs = da.getFeatureSource(new NameImpl("AFSPRAAKGEB_METINGEN"));
+
+            SimpleFeatureStore d = (SimpleFeatureStore) fs;
+
+            Transaction transaction = new DefaultTransaction("edit");
+            d.setTransaction(transaction);
+            try {
+                FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2(GeoTools.getDefaultHints());
+                Filter f = ff.id(new FeatureIdImpl(AGM_ID.toString()));
+                d.modifyFeatures("IND_IBIS_INGEDIEND_JN", "J", f);
+                transaction.commit();
+
+                json.put("success", true);
+            } catch (IOException | JSONException ex) {
+                log.error("Kan ibisgegevens niet indienen: ", ex);
+                transaction.rollback();
+                json.put("message", "Kan ibisgegevens niet indienen: " + ex.getLocalizedMessage());
+            } finally {
+                transaction.close();
+            }
+            return new StreamingResolution("application/json", new StringReader(json.toString(4)));
+        } catch (Exception ex) {
+            log.error("Cannot submit ibis: ", ex);
+            return new ErrorResolution(500, "Kan ibisgegevens niet indienen " + ex.getLocalizedMessage());
+        }
     }
 
     public Resolution submitCorrections() {
@@ -178,7 +213,7 @@ public class MOBEditActionBean extends EditFeatureActionBean {
             transaction.commit();
 
             return true;
-        } catch (IOException | CQLException| JSONException ex) {
+        } catch (IOException | CQLException | JSONException ex) {
             log.error("Cannot update corrections: ", ex);
             transaction.rollback();
             json.put("message", "Cannot update corrections: " + ex.getLocalizedMessage());
@@ -187,8 +222,8 @@ public class MOBEditActionBean extends EditFeatureActionBean {
             transaction.close();
         }
     }
-    private boolean submitAfspraakgebiedMetingen(SimpleFeatureStore mainFs, JSONObject json) throws IOException {
 
+    private boolean submitAfspraakgebiedMetingen(SimpleFeatureStore mainFs, JSONObject json) throws IOException {
         DataAccess da = mainFs.getDataStore();
         FeatureSource fs = da.getFeatureSource(new NameImpl("AFSPRAAKGEB_METINGEN"));
 
@@ -199,8 +234,6 @@ public class MOBEditActionBean extends EditFeatureActionBean {
         try {
             // Get all corrections with status "opgeslagen and from this municipality
 
-            
-            
             FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2(GeoTools.getDefaultHints());
             Filter f = ff.id(new FeatureIdImpl(AGM_ID.toString()));
             d.modifyFeatures("IND_CORRECTIES_INGEDIEND_JN", "J", f);
@@ -247,23 +280,6 @@ public class MOBEditActionBean extends EditFeatureActionBean {
         }
     }
 
-    @Override
-    protected JSONObject getJsonFeature(String feature) {
-        JSONObject f = new JSONObject(feature);
-        if (UPLOAD != null) {
-
-            try (InputStream is = UPLOAD.getInputStream()) {
-                byte[] bytes = IOUtils.toByteArray(is);
-                f.put("UPLOAD", bytes);
-                f.put("BESTANDSNAAM", UPLOAD.getFileName());
-                f.put("MIMETYPE", UPLOAD.getContentType());
-            } catch (IOException ex) {
-                log.error("Cannot read upload: ", ex);
-            }
-        }
-        return f;
-    }
-
     public Resolution saveIbis() {
         saveBedrijventerrein();
         setFeature(meting);
@@ -302,4 +318,22 @@ public class MOBEditActionBean extends EditFeatureActionBean {
             return super.isAttributeUserEditingDisabled(attrName);
         }
     }
+
+    @Override
+    protected JSONObject getJsonFeature(String feature) {
+        JSONObject f = new JSONObject(feature);
+        if (UPLOAD != null) {
+
+            try (InputStream is = UPLOAD.getInputStream()) {
+                byte[] bytes = IOUtils.toByteArray(is);
+                f.put("UPLOAD", bytes);
+                f.put("BESTANDSNAAM", UPLOAD.getFileName());
+                f.put("MIMETYPE", UPLOAD.getContentType());
+            } catch (IOException ex) {
+                log.error("Cannot read upload: ", ex);
+            }
+        }
+        return f;
+    }
+
 }

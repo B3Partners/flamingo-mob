@@ -229,7 +229,6 @@ public class MOBStoreActionBean extends LocalizableApplicationActionBean {
     }
 
     private void setSortBy(Query q,String sort, String dir, FilterFactory2 ff2 ){
-
         if(sort != null) {
             q.setSortBy(new SortBy[] {
                 ff2.sort(sort, "DESC".equals(dir) ? SortOrder.DESCENDING : SortOrder.ASCENDING)
@@ -245,5 +244,4 @@ public class MOBStoreActionBean extends LocalizableApplicationActionBean {
         }
         return obj;
     }
-
 }
