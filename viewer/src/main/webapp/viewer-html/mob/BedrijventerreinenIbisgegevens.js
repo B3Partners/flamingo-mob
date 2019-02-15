@@ -22,10 +22,11 @@
  */
 Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     extend: "viewer.components.Component",
+    agm_id: null,
+    meting_id: null,
+    gemeente_code: null,
     bedrijventerrein: null,
     bedrijventerreinen: null,
-    gemeente: null,
-    peildatum: null,
     disabled: false,
     stores: {},
     storesLoading: 0,
@@ -47,28 +48,20 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         this.initConfig(conf);
         viewer.components.BedrijventerreinenIbisgegevens.superclass.constructor.call(this, this.config);
         viewer.components.BedrijventerreinenBase.defineModels();
-        var me = this;
-        viewer.components.BedrijventerreinenBase.initializeEnvironmentVariables(conf.layer, function(response){
-            
-            me.agm_id = response.AGM_ID;
-            me.ag_id = response.AG_ID;
-            me.MTG_ID = response.IBIS_MTG_ID;
-            me.gemeente = response.GEM_CODE_CBS;
-            me.peildatum = response.IBIS_PEILDATUM;
-            
-            me.bedrijventerreinen = me.createDefaultMobAjaxStore('Bedrijventerreinen.model.Bedrijventerreinen', "BEDRIJVENTERREINEN", "", true);
-            me.loadWindow();
-            me.container.setLoading("Bezig met laden...");
-            me.bedrijventerreinen.load({
-                scope: this,
-                callback: function (records, operation, success) {
-                    // Create stores triggers load events. When all stores are loaded, storesLoaded() will be executed
-                    me.createStores();
-                }
-            });
-        });
-        
+        this.loadWindow();
+        this.container.setLoading("Bezig met laden...");
+        viewer.components.BedrijventerreinenBase.initializeEnvironmentVariables(conf.layer, this.initialize, this);
         return this;
+    },
+    initialize: function() {
+        this.bedrijventerreinen = this.createDefaultMobAjaxStore('Bedrijventerreinen.model.Bedrijventerreinen', "BEDRIJVENTERREINEN", "", true);
+        this.bedrijventerreinen.load({
+            scope: this,
+            callback: function (records, operation, success) {
+                // Create stores triggers load events. When all stores are loaded, storesLoaded() will be executed
+                this.createStores();
+            }
+        });
     },
     loadWindow: function() {
         var me = this;
@@ -364,7 +357,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     store: this.stores.gemeentes,
                     displayField: 'GEMEENTE_NAAM',
                     valueField: 'GEM_CODE_CBS',
-                    value: this.gemeente,
+                    value: this.gemeente_code,
                     readOnly: true,
                     listeners: {
                         scope: this,
@@ -383,7 +376,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     valueField: 'MTG_ID',
                     displayField: 'PEILDATUM_LABEL',
                     store: this.stores.peildatums,
-                    value: this.MTG_ID,
+                    value: this.meting_id,
                     readOnly: true,
                     listeners: {
                         scope: this,
@@ -424,11 +417,11 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         return container;
     },
     filterBedrijventerreinen: function(gemeente, peildatum) {
-        if (gemeente) this.gemeente = gemeente;
-        if (peildatum) this.MTG_ID = peildatum;
-        if (this.gemeente !== null && this.MTG_ID !== null) {
-            this.stores.bedrijventerreinen.getProxy().setExtraParam('GEM_CODE_CBS', this.gemeente);
-            this.stores.bedrijventerreinen.getProxy().setExtraParam('METING_ID', this.MTG_ID);
+        if (gemeente) this.gemeente_code = gemeente;
+        if (peildatum) this.meting_id = peildatum;
+        if (this.gemeente_code !== null && this.meting_id !== null) {
+            this.stores.bedrijventerreinen.getProxy().setExtraParam('GEM_CODE_CBS', this.gemeente_code);
+            this.stores.bedrijventerreinen.getProxy().setExtraParam('METING_ID', this.meting_id);
             this.stores.bedrijventerreinen.load();
         }
     },
@@ -637,8 +630,8 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             params: {
                 application: FlamingoAppLoader.get('appId'),
                 appLayer: this.layer,
-                GEM_CODE_CBS: this.gemeente,
-                METING_ID: this.MTG_ID,
+                GEM_CODE_CBS: this.gemeente_code,
+                METING_ID: this.meting_id,
                 meting: Ext.JSON.encode(this.getFormData()),
                 saveIbis: true
             },
@@ -685,7 +678,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             params: {
                 application: FlamingoAppLoader.get('appId'),
                 appLayer: this.layer,
-                GEM_CODE_CBS: this.gemeente,
+                GEM_CODE_CBS: this.gemeente_code,
                 AGM_ID: this.agm_id,
                 submitIbis: true
             },
@@ -709,14 +702,6 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     },
     showEditing: function(edit) {
         Ext.ComponentQuery.query("#edit-indicator")[0].update(edit ? "* is aangepast" : "");
-    },
-    showErrorDialog: function(msg, title) {
-        Ext.MessageBox.show({
-            title: title || 'Er is iets mis gegaan',
-            message: msg,
-            buttons: Ext.Msg.OK,
-            icon: Ext.Msg.ERROR
-        });
     },
     updateSelection: function(bedrijventerrein) {
         this.bedrijventerrein = bedrijventerrein;

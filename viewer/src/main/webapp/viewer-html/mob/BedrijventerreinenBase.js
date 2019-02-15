@@ -23,16 +23,7 @@
  */
 Ext.define ("viewer.components.BedrijventerreinenBase", {
     singleton : true,
-    modelsInitialized:false,
-    variablesInitialized:false,
-    
-    agm_id: null,
-    ibis_meting_id: null,
-    mob_meting_id: null,
-    gemeente: null,
-    peildatum_ibis: null,
-    peildatum_mob: null,
-    ag_id:null,    
+    modelsInitialized: false,
     defineModels: function() {
         if(this.modelsInitialized){
             return;
@@ -217,7 +208,7 @@ Ext.define ("viewer.components.BedrijventerreinenBase", {
             ]
         });
     },
-    initializeEnvironmentVariables:function(layer, successFunction){
+    initializeEnvironmentVariables:function(layer, successFunction, scope) {
         // agm_id
         // meting id
         // gemeente
@@ -237,16 +228,31 @@ Ext.define ("viewer.components.BedrijventerreinenBase", {
             scope: this,
             success: function (result) {
                 var response = Ext.JSON.decode(result.responseText);
+                scope = scope || this;
                 if (response.success) {
-                    successFunction(response);
+                    scope.agm_id = response.AGM_ID;
+                    scope.ag_id = response.AG_ID;
+                    scope.meting_id = response.MOB_MTG_ID;
+                    scope.gemeente_code = response.GEM_CODE_CBS;
+                    scope.peildatum_mob = response.MOB_PEILDATUM;
+                    scope.ingediend = response.IND_CORRECTIES_INGEDIEND_JN === 'J';
+                    scope.uitgifteIngevuld = response.VERWACHTE_UITGIFTE !== null;
+                    successFunction.call(scope);
                 } else {
-                    this.showErrorDialog("Kan benodigde variabelen niet ophalen.");
+                    this.showErrorDialog("Kan benodigde gegevens voor bedrijventerreinen niet ophalen.");
                 }
             },
             failure: function (result) {
-                this.showErrorDialog("Kan benodigde variabelen niet ophalen.");
+                this.showErrorDialog("Kan benodigde gegevens voor bedrijventerreinen niet ophalen.");
             }
         });
-
+    },
+    showErrorDialog: function(msg, title) {
+        Ext.MessageBox.show({
+            title: title || 'Er is iets mis gegaan',
+            message: msg,
+            buttons: Ext.Msg.OK,
+            icon: Ext.Msg.ERROR
+        });
     }
 });

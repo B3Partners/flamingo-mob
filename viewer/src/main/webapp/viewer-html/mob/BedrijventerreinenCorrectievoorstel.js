@@ -24,6 +24,13 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     stores: {},
     vectorLayer: null,
     appLayer: null,
+    agm_id: null,
+    ag_id: null,
+    meting_id: null,
+    gemeente_code: null,
+    peildatum_mob: null,
+    ingediend: null,
+    uitgifteIngevuld: null,
     config: {
         layer: null
     },
@@ -140,18 +147,8 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.config.viewerController.mapComponent.getMap().removeMarker("correctievoorstel");
     },
     
-    loadWindow:function(){
-        var me = this;
-        viewer.components.BedrijventerreinenBase.initializeEnvironmentVariables(this.layer, function(response){
-            me.agm_id = response.AGM_ID;
-            me.ag_id = response.AG_ID;
-            me.mob_meting_id = response.MOB_MTG_ID;
-            me.gemeente = response.GEM_CODE_CBS;
-            me.peildatum_mob = response.MOB_PEILDATUM;
-            me.ingediend = response.IND_CORRECTIES_INGEDIEND_JN === 'J';
-            me.uitgifteIngevuld = response.VERWACHTE_UITGIFTE !== null;
-            me.initComp();
-        });
+    loadWindow:function() {
+        viewer.components.BedrijventerreinenBase.initializeEnvironmentVariables(this.layer, this.initComp, this);
     },
 
     initComp: function () {
