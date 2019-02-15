@@ -239,8 +239,8 @@ public class MOBEditActionBean extends EditFeatureActionBean {
                     }
                 }
 
-                // afspraakgeb_metingen
-                {
+                if (json.has("AG_ID")) {
+                    // afspraakgeb_metingen
                     FeatureSource fs = da.getFeatureSource(new NameImpl("AFSPRAAKGEB_METINGEN"));
 
                     SimpleFeatureStore d = (SimpleFeatureStore) fs;
@@ -261,13 +261,13 @@ public class MOBEditActionBean extends EditFeatureActionBean {
                 json.put("success", true);
                 return new StreamingResolution("application/json", new StringReader(json.toString(4)));
             } catch (Exception ex) {
-                log.error("Cannot submit ibis: ", ex);
-                return new ErrorResolution(500, "Kan ibisgegevens niet indienen " + ex.getLocalizedMessage());
+                log.error("Cannot retrieve variables: ", ex);
+                return new ErrorResolution(500, "Kan gegevens niet ophalen " + ex.getLocalizedMessage());
             } finally {
                 mainFs.getDataStore().dispose();
             }
         } catch (Exception ex) {
-            log.error("cannot get datastore: ", ex);
+            log.error("Kan gegevens niet ophalen ", ex);
             return new ErrorResolution(500, "Kan gegevens niet ophalen" + ex.getLocalizedMessage());
         }
     }
