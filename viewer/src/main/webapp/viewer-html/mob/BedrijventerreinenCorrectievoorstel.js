@@ -162,40 +162,60 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             closeAction: "hide",
             height: 600,
             padding: '5px',
+            constrain: true,
             items: this.createForm(),
+            defaultAlign: 'tr-tr',
             listeners: {
                 scope: this,
-                hide: this.reset
+                hide: this.reset,
+                render: function() {
+                    this.poupRendered = true;
+                }
             }
-
         });
         this.createButtons();
+        this.resizeListener = this.resize.bind(this);
+        window.addEventListener("orientationchange", this.resizeListener);
+        window.addEventListener("resize", this.resizeListener);
+        Ext.on('resize', this.resizeListener);
+    },
+    resize: function() {
+        if (!this.poupRendered) {
+            return;
+        }
+        if (this.debounce) window.clearTimeout(this.debounce);
+        this.debounce = window.setTimeout((function alignPopup() {
+            this.container.alignTo(this.config.viewerController.getWrapperId(), 'tr-tr', [0, 0]);
+        }).bind(this), 50);
     },
     createForm: function () { 
         var user = FlamingoAppLoader.get("user");
         var isGemeente = user.roles.hasOwnProperty("gemeente");
         
         var fileField;
-        if(isGemeente){
-            fileField = {xtype: 'filefield', flex: 1, disabled: false, labelAlign: 'top', name:"UPLOAD", fieldLabel: "Upload", buttonOnly: true, 
+        if(isGemeente) {
+            fileField = {
+                xtype: 'filefield', flex: 1, disabled: false, labelAlign: 'top',
+                name:"UPLOAD", fieldLabel: "Upload", buttonOnly: true, buttonConfig: { width: "100%" },
                 buttonText: 'Upload shp-zip, pdf, ...', itemId: 'shp'};
-        }else{
+        } else {
             fileField = {
                 xtype: "container",
                 itemId: "uploadContainer",
                 layout:{
-                    type:"vbox"
+                    type: "vbox",
+                    align: "stretch"
                 },
                 items: [
                     {
-                        xtype:"label",
+                        xtype: "label",
                         text: 'Upload gemeente',
                         padding: "6px"
                     },
                     {
                         xtype: "button",
                         text: "Download",
-                        width: "100%",
+                        flex: 1,
                         listeners: {
                             click: function () {
                                 var url = actionBeans["mobeditfeature"] + "?downloadAttachment=true&CV_ID=" + this.currentFID + "&appLayer=" + this.layer;
@@ -210,30 +230,33 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         }
         this.inputContainer = Ext.create('Ext.form.Panel', {
             flex: 1,
+            scrollable: true,
+            layout: {
+                type: 'vbox',
+                align: 'stretch'
+            },
             items: [
                 {
-                    xtype: 'container', layout: {type: 'hbox'}, defaults: {padding: '5px'}, items: [
-                        {xtype: 'combobox', flex: 2, labelAlign: 'top', allowBlank:false, name: 'CLASSIFICATIE_ID', fieldLabel: "Voorgestelde classificatie", displayField: "CLASSIFICATIE", valueField: "CLS_ID", store: this.stores.classificaties},
+                    xtype: 'container', layout: { type: 'hbox' }, defaults: { padding: '5px' }, items: [
+                        {
+                            xtype: 'combobox', flex: 2, labelAlign: 'top', allowBlank: false, name: 'CLASSIFICATIE_ID',
+                            fieldLabel: "Voorgestelde classificatie", displayField: "CLASSIFICATIE", valueField: "CLS_ID",
+                            store: this.stores.classificaties
+                        },
                         fileField
                     ]
                 },
                 {
-                    xtype: "textarea", name: "TOELICHTING", fieldLabel: "Toelichting", allowBlank:false, padding: '5px', labelAlign: 'top', itemId: "toelichting", anchor: '100%', height: "200px",
+                    xtype: "textarea", name: "TOELICHTING", fieldLabel: "Toelichting", allowBlank:false, padding: '5px', labelAlign: 'top', itemId: "toelichting", height: "200px",
                     listeners: { afterrender: function(a){a.focus();var b = document.getElementById(a.inputId);setTimeout(function(){b.scrollTop = 99999;}, 10);},scope:this}
                 },
                 {
                     xtype: 'container', layout: {type: 'hbox'}, items: [
-                        {flex: 1, xtype: 'combobox', labelAlign: 'top', readOnly: isGemeente, name: 'CORRECTIE_STATUS_ID', margin: '5px', padding: '5px', fieldLabel: "Status", value: 1, displayField: "CORRECTIE_STATUS", valueField: "CS_ID", store: this.stores.statussen},
-                        {flex: 2, xtype: 'container', layout: {type: 'hbox', pack: 'end'}, defaults: {margin: '5px', padding: '5px'}, items: [
-                                {xtype: 'datefield', readOnly:true, format: 'd-m-Y', submitFormat: 'c', name: "MUTATIEDATUM_GEMEENTE", labelAlign: 'top', fieldLabel: 'Laatste wijziging gemeente', itemId: 'datumLaatstGewijzigdGemeente'},
-                                {xtype: 'textfield', readOnly:true, name: "MUT_GEMEENTE_DOOR", labelAlign: 'top', fieldLabel: "Naam", itemId: 'naamLaatstGewijzigdGemeente'}]
-                        }
-                    ]
-                },
-                {
-                    xtype: 'container', layout: {type: 'hbox', pack: 'end'}, defaults: {margin: '5px', padding: '5px'}, items: [
-                        {xtype: 'datefield', readOnly:true,  labelAlign: 'top', format: 'd-m-Y', altFormats: 'd-m-y|d-m-Y H:i:s', submitFormat: 'c', name: "MUTATIEDATUM_PROVINCIE", fieldLabel: 'Laatste wijziging provincie', itemId: 'datumLaatstGewijzigdProvincie'},
-                        {xtype: 'textfield', readOnly:true, labelAlign: 'top', name: "MUT_PROVINCIE_DOOR", fieldLabel: "Naam", itemId: 'naamLaatstGewijzigdProvincie'}
+                        { flex: 1, xtype: 'combobox', labelAlign: 'top', readOnly: isGemeente, name: 'CORRECTIE_STATUS_ID', margin: '5px', padding: '5px', fieldLabel: "Status", value: 1, displayField: "CORRECTIE_STATUS", valueField: "CS_ID", store: this.stores.statussen},
+                        { flex: 2, xtype: 'container', layout: { type: 'vbox', align: "stretch"}, items: [
+                            this.getMutatieLayout("gemeente"),
+                            this.getMutatieLayout("provincie")
+                        ]}
                     ]
                 }
             ],
@@ -261,6 +284,38 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             ]
         });
         return this.inputContainer;
+    },
+    getMutatieLayout: function(type) {
+        var fieldProps = { datumName: 'MUTATIEDATUM_GEMEENTE', datumLabel: 'Laatste wijziging gemeente', doorName: 'MUT_GEMEENTE_DOOR' };
+        if (type === "provincie") {
+            fieldProps = { datumName: 'MUTATIEDATUM_PROVINCIE', datumLabel: 'Laatste wijziging provincie', doorName: 'MUT_PROVINCIE_DOOR' };
+        }
+        return {
+            xtype: 'container',
+            layout: { type: 'hbox', pack: 'end', align: 'stretch' },
+            defaults: { margin: '5px', padding: '5px' },
+            items: [
+                {
+                    xtype: 'datefield',
+                    flex: 1,
+                    readOnly:true,
+                    labelAlign: 'top',
+                    format: 'd-m-Y',
+                    altFormats: 'd-m-y|d-m-Y H:i:s',
+                    submitFormat: 'c',
+                    name: fieldProps.datumName,
+                    fieldLabel: fieldProps.datumLabel
+                },
+                {
+                    xtype: 'textfield',
+                    flex: 1,
+                    readOnly:true,
+                    labelAlign: 'top',
+                    fieldLabel: "Naam",
+                    name: fieldProps.doorName
+                }
+            ]
+        };
     },
     resetForm: function(){
         this.container.hide();
@@ -527,5 +582,11 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.reset();
         this.resetForm();
         this.config.viewerController.getLayer(this.config.viewerController.getAppLayerById(this.layer)).reload();
+    },
+    getExtComponents: function () {
+        if (this.container) {
+            return [ this.container.getId() ];
+        }
+        return [];
     }
 });
