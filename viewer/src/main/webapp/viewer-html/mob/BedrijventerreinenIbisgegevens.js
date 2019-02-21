@@ -62,6 +62,20 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 this.createStores();
             }
         });
+        var css = [
+            '.bedrijventerreinen-editable::before {',
+                'content: "\\f044";',
+                'font-family: FontAwesome !important;',
+                'font-size: 20px;',
+                'line-height: 20px;',
+                'position: absolute;',
+                'margin-top: 7px;',
+                'margin-left: 10px;',
+                'color: #CCCCCC;',
+            '}',
+            '.is-disabled .bedrijventerreinen-editable::before { content: ""; }'
+        ];
+        Ext.util.CSS.createStyleSheet(css.join(" "), "bedrijventerreinen");
     },
     loadWindow: function() {
         var me = this;
@@ -188,8 +202,34 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     selModel: 'cellmodel',
                     columns: [
                         { header: 'Prijzen in euro\'s', dataIndex: 'label', flex: 1 },
-                        { header: 'Min', dataIndex: 'min', editor: 'textfield', flex: .5, align: 'end' },
-                        { header: 'Max', dataIndex: 'max', editor: 'textfield', flex: .5, align: 'end' }
+                        {
+                            header: 'Min',
+                            dataIndex: 'min',
+                            editor: 'textfield',
+                            flex: .5,
+                            align: 'end',
+                            scope: this,
+                            renderer: function (value, metaData) {
+                                if (!this.disabled) {
+                                    metaData.tdCls = "bedrijventerreinen-editable";
+                                }
+                                return value;
+                            }
+                        },
+                        {
+                            header: 'Max',
+                            dataIndex: 'max',
+                            editor: 'textfield',
+                            flex: .5,
+                            align: 'end',
+                            scope: this,
+                            renderer: function (value, metaData) {
+                                if (!this.disabled) {
+                                    metaData.tdCls = "bedrijventerreinen-editable";
+                                }
+                                return value;
+                            }
+                        }
                     ],
                     margin: '0 0 10 0'
                 },
@@ -308,7 +348,20 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     selModel: 'cellmodel',
                     columns: [
                         { header: '', dataIndex: 'label', flex: 1 },
-                        { header: 'Oppervlak', dataIndex: 'oppervlak', editor: 'textfield', flex: 1, align: 'end' }
+                        {
+                            header: 'Oppervlak',
+                            dataIndex: 'oppervlak',
+                            editor: 'textfield',
+                            flex: 1,
+                            align: 'end',
+                            scope: this,
+                            renderer: function (value, metaData, record) {
+                                if (!this.disabled && record.get("editable")) {
+                                    metaData.tdCls = "bedrijventerreinen-editable";
+                                }
+                                return value;
+                            }
+                        }
                     ],
                     margin: '0 0 10 0'
                 },
@@ -798,6 +851,8 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         this.setFormDisabled(this.algemeenForm, disabled);
         this.setFormDisabled(this.bereikbaarheidForm, disabled);
         this.setFormDisabled(this.oppervlakteForm, disabled);
+        Ext.ComponentQuery.query("#prijzen-grid")[0].toggleCls("is-disabled", disabled);
+        Ext.ComponentQuery.query("#oppervlak-grid")[0].toggleCls("is-disabled", disabled);
     },
     setFormDisabled: function(form, disabled) {
         var fields = form.query("textfield, combobox");
