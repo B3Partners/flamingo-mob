@@ -148,7 +148,28 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     },
     
     loadWindow:function() {
+        this.createButtons();
+        var mask = this.buttonContainer.setLoading("Laden...");
+        this.updateMaskLayout(mask);
         viewer.components.BedrijventerreinenBase.initializeEnvironmentVariables(this.layer, this.initComp, this);
+    },
+
+    updateMaskLayout: function(mask) {
+        var maskDom = mask.el.dom;
+        if (!maskDom) {
+            return;
+        }
+        var msg = maskDom.querySelector(".x-mask-msg");
+        var text = maskDom.querySelector(".x-mask-msg-text");
+        if (!msg || !text) {
+            return;
+        }
+        msg.style.height = '100%';
+        msg.style.right = 'auto';
+        msg.style.top = 'auto';
+        text.style.backgroundPosition = "left center";
+        text.style.padding = "0 0 0 25px";
+        msg.style.left = ((maskDom.clientWidth - msg.clientWidth) / 2) + "px";
     },
 
     initComp: function () {
@@ -173,11 +194,11 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                 }
             }
         });
-        this.createButtons();
         this.resizeListener = this.resize.bind(this);
         window.addEventListener("orientationchange", this.resizeListener);
         window.addEventListener("resize", this.resizeListener);
         Ext.on('resize', this.resizeListener);
+        this.buttonContainer.setLoading(false);
     },
     resize: function() {
         if (!this.poupRendered) {
@@ -196,7 +217,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         if(isGemeente) {
             fileField = {
                 xtype: 'filefield', flex: 1, disabled: false, labelAlign: 'top',
-                name:"UPLOAD", fieldLabel: "Upload", buttonOnly: true, buttonConfig: { width: "100%" },
+                name: "UPLOAD", fieldLabel: "Upload", buttonOnly: true,
                 buttonText: 'Upload shp-zip, pdf, ...', itemId: 'shp'};
         } else {
             fileField = {
@@ -237,7 +258,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             },
             items: [
                 {
-                    xtype: 'container', layout: { type: 'hbox' }, defaults: { padding: '5px' }, items: [
+                    xtype: 'container', layout: { type: 'hbox', align: 'stretch' }, defaults: { padding: '5px' }, items: [
                         {
                             xtype: 'combobox', flex: 2, labelAlign: 'top', allowBlank: false, name: 'CLASSIFICATIE_ID',
                             fieldLabel: "Voorgestelde classificatie", displayField: "CLASSIFICATIE", valueField: "CLS_ID",
@@ -321,25 +342,19 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.container.hide();
     },
     createButtons: function () {
-        if (this.buttonContainer === null) {
-            this.buttonContainer = Ext.create('Ext.container.Container', {
-                renderTo: Ext.get(this.config.viewerController.getMapId()),
-                floating: true,
-                border: false,
-                shadow: false,
-                defaults: {
-                    margin: '5px'
-                },
-                style: {
-                    'zIndex': 1002
-                }
-            });
-        }
-        if (this.cvbutton) {
-            this.cvbutton.destroy();
-            this.vubutton.destroy();
-            this.indienbutton.destroy();
-        }
+        this.buttonContainer = Ext.create('Ext.container.Container', {
+            renderTo: Ext.get(this.config.viewerController.getMapId()),
+            floating: true,
+            border: false,
+            shadow: false,
+            defaults: {
+                margin: '5px'
+            },
+            style: {
+                'zIndex': 1002
+            }
+        });
+
         this.cvbutton = Ext.create('Ext.Button', {
             text: 'Correctievoorstel',
             disabled: this.ingediend,
@@ -357,117 +372,14 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                 disabled: this.uitgifteIngevuld,
                 listeners: {
                     scope: this,
-                    click: function () {
-                        var uitgifteWindow = Ext.create('Ext.window.Window', {
-                            title: 'Invoeren verwachte uitgifte',
-                            height: 200,
-                            modal: true,
-                            width: 400,
-                            items: [
-                                {
-                                    xtype: 'label',
-                                    text: 'Hier komt een tekst'
-                                },
-                                {
-                                    xtype: 'numberfield',
-                                    fieldLabel: 'Verwachte uitgifte (hectare)',
-                                    itemId: 'uitgifte',
-                                    labelWidth: 200
-                                }
-                            ],
-                            bbar: [
-                                {
-                                    xtype: 'button',
-                                    text: 'Opslaan',
-                                    itemId: 'save-button',
-                                    listeners: {
-                                        scope: this,
-                                        click: function (btn) {
-                                            var allotment = btn.ownerCt.ownerCt.query("#uitgifte")[0].getValue();
-                                            if (allotment) {
-                                                Ext.MessageBox.show({
-                                                    title: 'Weet u het zeker?',
-                                                    message: 'Weet u zeker dat u de verwachte uitgifte wilt indienen?',
-                                                    buttons: Ext.Msg.YESNO,
-                                                    icon: Ext.Msg.QUESTION,
-                                                    scope: this,
-                                                    fn: function (btn) {
-                                                        if (btn === 'yes') {
-                                                            Ext.Ajax.request({
-                                                                url: actionBeans["mobeditfeature"],
-                                                                scope: this,
-                                                                params: {
-                                                                    submitExpectedAllotment: true,
-                                                                    uitgifte: allotment,
-                                                                    AGM_ID: this.agm_id,
-                                                                    appLayer: this.layer
-                                                                },
-                                                                success: function (result) {
-                                                                    var response = Ext.JSON.decode(result.responseText);
-                                                                    if (response.success) {
-                                                                        Ext.MessageBox.alert(i18next.t('viewer_components_edit_40'), "Verwachte uitgifte ingediend.");
-                                                                    } else {
-                                                                        Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de verwachte uitgifte is mislukt. " + response.message);
-                                                                    }
-                                                                    uitgifteWindow.hide();
-                                                                },
-                                                                failure: function (result) {
-                                                                    Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de verwachte uitgifte is mislukt. " + result.message);
-                                                                    uitgifteWindow.hide();
-                                                                }
-                                                            });
-                                                        }
-                                                    }
-                                                });
-                                            } else {
-                                                Ext.MessageBox.alert("Fout", "Hoeveelheid hectare is niet ingevuld.");
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        });
-                        uitgifteWindow.show();
-                    }
+                    click: this.showExpectedAllotmentWindow
                 }
             });
 
             this.indienbutton = Ext.create('Ext.Button', {
                 text: 'Indienen',
                 listeners: {
-                    click: function () {
-                        Ext.MessageBox.show({
-                            title: 'Weet u het zeker?',
-                            message: 'Weet u zeker dat u alle opgeslagen correctievoorstellen wilt indienen?',
-                            buttons: Ext.Msg.YESNO,
-                            icon: Ext.Msg.QUESTION,
-                            scope: this,
-                            fn: function (btn) {
-                                if (btn === 'yes') {
-                                    Ext.Ajax.request({
-                                        url: actionBeans["mobeditfeature"],
-                                        scope: this,
-                                        params: {
-                                            submitCorrections: true,
-                                            AGM_ID: this.agm_id,
-                                            appLayer: this.layer
-                                        },
-                                        success: function (result) {
-                                            var response = Ext.JSON.decode(result.responseText);
-                                            if (response.success) {
-                                                Ext.MessageBox.alert(i18next.t('viewer_components_edit_40'), "Correctievoorstellen ingediend.");
-                                            } else {
-                                                Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de correctievoorstellen is mislukt. " + response.message);
-                                            }
-                                        },
-                                        failure: function (result) {
-                                            Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de correctievoorstellen is mislukt. " + result.message);
-                                        }
-                                    });
-                                }
-                            }
-                        });
-                    },
+                    click: this.confirmSubmitCorrections,
                     scope: this
                 }
             });
@@ -483,7 +395,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         if (!this.buttonContainer) {
             return;
         }
-        var pos = [Number(-20), Number(5)];
+        var pos = [-20, 5];
         var align = 'tr';
         var mapContainer = Ext.get(this.config.viewerController.getMapId());
         this.buttonContainer.alignTo(mapContainer, [align, align].join('-'), pos);
@@ -550,7 +462,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.inputContainer.submit({
             url: actionBeans["mobeditfeature"] + "?editFeature=true",
             waitMsg: 'Correctievoorstel opslaan',
-            scope:this,
+            scope: this,
             params:{
                 meting: Ext.JSON.encode(feature),
                 application: this.config.viewerController.app.id,
@@ -588,6 +500,114 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.reset();
         this.resetForm();
         this.config.viewerController.getLayer(this.config.viewerController.getAppLayerById(this.layer)).reload();
+    },
+    showExpectedAllotmentWindow: function() {
+        var uitgifteWindow = Ext.create('Ext.window.Window', {
+            title: 'Invoeren verwachte uitgifte',
+            height: 200,
+            modal: true,
+            width: 400,
+            items: [
+                {
+                    xtype: 'label',
+                    text: 'Hier komt een tekst'
+                },
+                {
+                    xtype: 'numberfield',
+                    fieldLabel: 'Verwachte uitgifte (hectare)',
+                    itemId: 'uitgifte',
+                    labelWidth: 200
+                }
+            ],
+            bbar: [
+                {
+                    xtype: 'button',
+                    text: 'Opslaan',
+                    itemId: 'save-button',
+                    listeners: {
+                        scope: this,
+                        click: function (btn) {
+                            var allotment = btn.ownerCt.ownerCt.query("#uitgifte")[0].getValue();
+                            if (allotment) {
+                                this.confirmExpectedAllotment(allotment, uitgifteWindow);
+                            } else {
+                                Ext.MessageBox.alert("Fout", "Hoeveelheid hectare is niet ingevuld.");
+                            }
+                        }
+                    }
+                }
+            ]
+        });
+        uitgifteWindow.show();
+    },
+    confirmExpectedAllotment: function(allotment, uitgifteWindow) {
+        Ext.MessageBox.show({
+            title: 'Weet u het zeker?',
+            message: 'Weet u zeker dat u de verwachte uitgifte wilt indienen?',
+            buttons: Ext.Msg.YESNO,
+            icon: Ext.Msg.QUESTION,
+            scope: this,
+            fn: function (btn) {
+                if (btn === 'yes') {
+                    Ext.Ajax.request({
+                        url: actionBeans["mobeditfeature"],
+                        scope: this,
+                        params: {
+                            submitExpectedAllotment: true,
+                            uitgifte: allotment,
+                            AGM_ID: this.agm_id,
+                            appLayer: this.layer
+                        },
+                        success: function (result) {
+                            var response = Ext.JSON.decode(result.responseText);
+                            if (response.success) {
+                                Ext.MessageBox.alert(i18next.t('viewer_components_edit_40'), "Verwachte uitgifte ingediend.");
+                            } else {
+                                Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de verwachte uitgifte is mislukt. " + response.message);
+                            }
+                            uitgifteWindow.hide();
+                        },
+                        failure: function (result) {
+                            Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de verwachte uitgifte is mislukt. " + result.message);
+                            uitgifteWindow.hide();
+                        }
+                    });
+                }
+            }
+        });
+    },
+    confirmSubmitCorrections: function() {
+        Ext.MessageBox.show({
+            title: 'Weet u het zeker?',
+            message: 'Weet u zeker dat u alle opgeslagen correctievoorstellen wilt indienen?',
+            buttons: Ext.Msg.YESNO,
+            icon: Ext.Msg.QUESTION,
+            scope: this,
+            fn: function (btn) {
+                if (btn === 'yes') {
+                    Ext.Ajax.request({
+                        url: actionBeans["mobeditfeature"],
+                        scope: this,
+                        params: {
+                            submitCorrections: true,
+                            AGM_ID: this.agm_id,
+                            appLayer: this.layer
+                        },
+                        success: function (result) {
+                            var response = Ext.JSON.decode(result.responseText);
+                            if (response.success) {
+                                Ext.MessageBox.alert(i18next.t('viewer_components_edit_40'), "Correctievoorstellen ingediend.");
+                            } else {
+                                Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de correctievoorstellen is mislukt. " + response.message);
+                            }
+                        },
+                        failure: function (result) {
+                            Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de correctievoorstellen is mislukt. " + result.message);
+                        }
+                    });
+                }
+            }
+        });
     },
     getExtComponents: function () {
         if (this.container) {
