@@ -181,7 +181,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             width: 600,
             title: 'Correctievoorstel   - Peildatum ' + this.peildatum_mob,
             closeAction: "hide",
-            height: 600,
+            height: 610,
             padding: '5px',
             constrain: true,
             items: this.createForm(),
@@ -268,12 +268,27 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                     ]
                 },
                 {
-                    xtype: "textarea", name: "TOELICHTING", fieldLabel: "Toelichting", allowBlank:false, padding: '5px', labelAlign: 'top', itemId: "toelichting", height: "200px",
-                    listeners: { afterrender: function(a){a.focus();var b = document.getElementById(a.inputId);setTimeout(function(){b.scrollTop = 99999;}, 10);},scope:this}
+                    xtype: "textarea",
+                    name: "TOELICHTING",
+                    fieldLabel: "Toelichting",
+                    allowBlank: false,
+                    padding: '5px',
+                    margin: '0 5px',
+                    labelAlign: 'top',
+                    itemId: "toelichting",
+                    height: "300px",
+                    listeners: {
+                        afterrender: function(a){
+                            a.focus();
+                            var b = document.getElementById(a.inputId);
+                            setTimeout(function(){ b.scrollTop = 99999; }, 10);
+                        },
+                        scope:this
+                    }
                 },
                 {
                     xtype: 'container', layout: {type: 'hbox'}, items: [
-                        { flex: 1, xtype: 'combobox', labelAlign: 'top', readOnly: isGemeente, name: 'CORRECTIE_STATUS_ID', margin: '5px', padding: '5px', fieldLabel: "Status", value: 1, displayField: "CORRECTIE_STATUS", valueField: "CS_ID", store: this.stores.statussen},
+                        { flex: 1, xtype: 'combobox', labelAlign: 'top', readOnly: isGemeente, name: 'CORRECTIE_STATUS_ID', margin: '0 5px', padding: '5px', fieldLabel: "Status", value: 1, displayField: "CORRECTIE_STATUS", valueField: "CS_ID", store: this.stores.statussen},
                         { flex: 2, xtype: 'container', layout: { type: 'vbox', align: "stretch"}, items: [
                             this.getMutatieLayout("gemeente"),
                             this.getMutatieLayout("provincie")
@@ -314,7 +329,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         return {
             xtype: 'container',
             layout: { type: 'hbox', pack: 'end', align: 'stretch' },
-            defaults: { margin: '5px', padding: '5px' },
+            defaults: { margin: '0 5px', padding: '5px' },
             items: [
                 {
                     xtype: 'datefield',
