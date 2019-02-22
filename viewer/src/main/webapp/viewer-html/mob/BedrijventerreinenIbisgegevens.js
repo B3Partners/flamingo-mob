@@ -696,7 +696,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     this.stores.bedrijventerreinen.load();
                     Ext.MessageBox.show({
                         title: 'Gelukt',
-                        message: "Ibisgegvens opgeslagen",
+                        message: "Ibisgegevens opgeslagen",
                         buttons: Ext.Msg.OK,
                         icon: Ext.Msg.INFO
                     });
