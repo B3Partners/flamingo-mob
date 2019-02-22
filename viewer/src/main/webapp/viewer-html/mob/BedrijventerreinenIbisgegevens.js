@@ -386,10 +386,9 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     },
     createFilterContainer: function() {
         var container = Ext.create('Ext.panel.Panel', {
-            width: '20%',
+            width: 225,
             plain: true,
             border: 0,
-            minWidth: 200,
             layout: {
                 type: 'vbox',
                 align: 'stretch'
@@ -423,7 +422,8 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     xtype: 'combobox',
                     editable: false,
                     queryMode: 'local',
-                    labelAlign: 'top',
+                    labelAlign: 'left',
+                    labelWidth: 75,
                     fieldLabel: 'Peildatum',
                     itemId: 'peildatum',
                     valueField: 'MTG_ID',
