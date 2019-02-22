@@ -759,6 +759,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     updateSelection: function(bedrijventerrein) {
         this.bedrijventerrein = bedrijventerrein;
         this.updateForms();
+        this.form.setActiveTab(0);
     },
     updateForms: function() {
         var bedrijventerrein = this.bedrijventerrein;
