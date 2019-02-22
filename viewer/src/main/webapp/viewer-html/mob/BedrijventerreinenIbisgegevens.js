@@ -266,8 +266,14 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 maxWidth: 500,
                 listeners: {
                     scope: this,
-                    change: function() {
+                    change: function(field) {
                         this.showEditing(true);
+                        if (field.getName() === "IND_VEROUDERD" && field.getValue() === "Nee") {
+                            this.bereikbaarheidForm.getForm().setValues({
+                                "BRUTO_OPP_VEROUDERD": "",
+                                "HOOFDOORZAAK_VEROUD_CODE": ""
+                            });
+                        }
                     }
                 }
             },
