@@ -130,6 +130,11 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         if(user.roles.hasOwnProperty("provincie")){
             this.inputContainer.query("#uploadContainer")[0].setVisible (f.hasOwnProperty("UPLOAD"));
         }
+        if(user.roles.hasOwnProperty("gemeente")) {
+            this.inputContainer.query("#save-button")[0].setDisabled( f.CORRECTIE_STATUS_ID !== 1);
+        }else{
+            this.inputContainer.query("#save-button")[0].setDisabled(false);
+        }
     },
 
     newCorrection: function () {
@@ -218,7 +223,8 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             fileField = {
                 xtype: 'filefield', flex: 1, disabled: false, labelAlign: 'top',
                 name: "UPLOAD", fieldLabel: "Upload", buttonOnly: true,
-                buttonText: 'Upload shp-zip, pdf, ...', itemId: 'shp'};
+                itemId: "uploadContainer",
+                buttonText: 'Upload shp-zip, pdf, ...'};
         } else {
             fileField = {
                 xtype: "container",
