@@ -180,7 +180,7 @@ public class MOBEditActionBean extends EditFeatureActionBean {
                 FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2(GeoTools.getDefaultHints());
                 // afspraakgebieden
                 {
-                    FeatureSource fs = da.getFeatureSource(new NameImpl("AFSPRAAKGEBIEDEN"));
+                    FeatureSource fs = da.getFeatureSource(new NameImpl("GEBRUIKERSAUTORISATIE"));
 
                     SimpleFeatureStore d = (SimpleFeatureStore) fs;
                     Filter f = ECQL.toFilter("GEBRUIKERSNAAM = '" + username + "'");
