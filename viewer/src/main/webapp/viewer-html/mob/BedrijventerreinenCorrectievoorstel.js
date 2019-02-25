@@ -129,6 +129,9 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.inputContainer.getForm().setValues(f);
         if(user.roles.hasOwnProperty("provincie")){
             this.inputContainer.query("#uploadContainer")[0].setVisible (f.hasOwnProperty("UPLOAD"));
+            if(f.hasOwnProperty("UPLOAD")){
+                this.inputContainer.query("#downloadButton")[0].setText("Download " + f["BESTANDSNAAM"]);
+            }
         }
         if(user.roles.hasOwnProperty("gemeente")) {
             this.inputContainer.query("#save-button")[0].setDisabled( f.CORRECTIE_STATUS_ID !== 1);
@@ -222,8 +225,15 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         if(isGemeente) {
             fileField = {
                 xtype: 'filefield', flex: 1, disabled: false, labelAlign: 'top',
-                name: "UPLOAD", fieldLabel: "Upload", buttonOnly: true,
+                name: "UPLOAD", fieldLabel: "Upload",
                 itemId: "uploadContainer",
+                grow:true,
+                listeners: {
+                        change: function(fld, value) {
+                            var newValue = value.replace(/C:\\fakepath\\/g, '');
+                            fld.setRawValue(newValue);
+                        }
+                    },
                 buttonText: 'Upload shp-zip, pdf, ...'};
         } else {
             fileField = {
@@ -242,6 +252,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                     {
                         xtype: "button",
                         text: "Download",
+                        itemId: "downloadButton",
                         flex: 1,
                         listeners: {
                             click: function () {
@@ -266,7 +277,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                 {
                     xtype: 'container', layout: { type: 'hbox', align: 'stretch' }, defaults: { padding: '5px' }, items: [
                         {
-                            xtype: 'combobox', flex: 2, labelAlign: 'top', allowBlank: false, name: 'CLASSIFICATIE_ID',
+                            xtype: 'combobox', flex: 1, labelAlign: 'top', allowBlank: false, name: 'CLASSIFICATIE_ID',
                             fieldLabel: "Voorgestelde classificatie", displayField: "CLASSIFICATIE", valueField: "CLS_ID",
                             store: this.stores.classificaties
                         },
