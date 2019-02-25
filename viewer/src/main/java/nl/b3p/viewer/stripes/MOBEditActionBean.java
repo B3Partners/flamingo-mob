@@ -153,7 +153,12 @@ public class MOBEditActionBean extends EditFeatureActionBean {
         // CORRECTIESTATUS
         //  Resolution r = saveRelatedFeatures();
         setFeature(meting);
-        return edit();
+        edit();
+
+        // See https://docs.sencha.com/extjs/6.2.0/classic/Ext.form.action.Submit.html for error response
+        return new StreamingResolution("text/xml", new StringReader(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><message success=\"true\"></message>"
+        ));
     }
 
     public Resolution retrieveVariables() {
