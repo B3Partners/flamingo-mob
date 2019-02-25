@@ -237,6 +237,7 @@ Ext.define ("viewer.components.BedrijventerreinenBase", {
                     scope.peildatum_mob = response.MOB_PEILDATUM;
                     scope.ingediend = response.IND_CORRECTIES_INGEDIEND_JN === 'J';
                     scope.uitgifteIngevuld = response.VERWACHTE_UITGIFTE !== null;
+                    scope.verwachteUitgifte = response.VERWACHTE_UITGIFTE;
                     successFunction.call(scope);
                 } else {
                     this.showErrorDialog("Kan benodigde gegevens voor bedrijventerreinen niet ophalen.");

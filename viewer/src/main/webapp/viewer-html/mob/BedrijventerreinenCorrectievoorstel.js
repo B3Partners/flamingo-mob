@@ -31,6 +31,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     peildatum_mob: null,
     ingediend: null,
     uitgifteIngevuld: null,
+    verwachteUitgifte:null,
     config: {
         layer: null
     },
@@ -206,6 +207,10 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         window.addEventListener("orientationchange", this.resizeListener);
         window.addEventListener("resize", this.resizeListener);
         Ext.on('resize', this.resizeListener);
+        if(this.ingediend){
+            this.vubutton.setDisabled(true);
+            this.vubutton.setText("Ingediend: " + this.verwachteUitgifte + " ha");
+        }
         this.buttonContainer.setLoading(false);
     },
     resize: function() {
