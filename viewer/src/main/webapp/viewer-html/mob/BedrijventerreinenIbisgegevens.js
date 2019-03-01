@@ -568,7 +568,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             data: [
                 { id: 'terstond_uitgeefbaar', label: 'Terstond uitgeefbaar', overheid: '', particulier: '' },
                 { id: 'niet_terstond_uitgeefbaar', label: 'Niet terstond uitgeefbaar', overheid: '', particulier: '' },
-                { id: 'grootsts_uitgeefbaar_deel', label: 'Grootsts uitgeefbaar deel', overheid: '', particulier: '' }
+                { id: 'grootst_uitgeefbaar_deel', label: 'Grootst uitgeefbaar deel', overheid: '', particulier: '' }
             ]
         });
         this.stores = {
@@ -820,7 +820,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         this.updateGrid(this.stores.uitgeefbaar, {
             terstond_uitgeefbaar: { overheid: bedrijventerrein.get("UITGEEFBAAR_OVERH_OPP"), particuler: bedrijventerrein.get("UITGEEFBAAR_PART_OPP") }
             // niet_terstond_uitgeefbaar: { overheid: '', particuler: '' },
-            // grootsts_uitgeefbaar_deel: { overheid: '', particuler: '' }
+            // grootst_uitgeefbaar_deel: { overheid: '', particuler: '' }
         });
         this.showEditing(false);
     },
