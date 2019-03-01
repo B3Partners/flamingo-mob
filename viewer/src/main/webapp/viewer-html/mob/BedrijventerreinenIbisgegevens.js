@@ -416,6 +416,8 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         return this.oppervlakteForm;
     },
     createFilterContainer: function() {
+        var user = FlamingoAppLoader.get("user");
+        var isProvincieUser = user.roles.hasOwnProperty("provincie");
         var container = Ext.create('Ext.panel.Panel', {
             width: 225,
             plain: true,
@@ -510,7 +512,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     }
                 }
             ],
-            dockedItems: [{
+            dockedItems: isProvincieUser ? [] : [{
                 xtype: 'toolbar',
                 dock: 'bottom',
                 style: 'border-width: 1px 0 1px 1px !important;',
