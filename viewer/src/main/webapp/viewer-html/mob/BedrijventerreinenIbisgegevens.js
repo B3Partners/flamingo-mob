@@ -443,7 +443,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     displayField: 'GEMEENTE_NAAM',
                     valueField: 'GEM_CODE_CBS',
                     value: this.gemeente_code,
-                    readOnly: true,
+                    readOnly: !isProvincieUser,
                     listeners: {
                         scope: this,
                         change: function(combo, value) {
