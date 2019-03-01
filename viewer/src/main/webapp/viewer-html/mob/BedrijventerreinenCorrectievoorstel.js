@@ -114,17 +114,21 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.mode = "edit";
         this.currentFID = f.CV_ID;
 
-        var feat = Ext.create(viewer.viewercontroller.controller.Feature, {wktgeom: f.GEOMETRIE});
-        this.vectorLayer.addFeatures([feat]);
+        if (f.GEOMETRIE) {
+            var feat = Ext.create(viewer.viewercontroller.controller.Feature, {wktgeom: f.GEOMETRIE});
+            this.vectorLayer.addFeatures([feat]);
+        }
         this.container.show();
         
         var user = FlamingoAppLoader.get("user");
         if(f.MUTATIEDATUM_PROVINCIE){
             f.MUTATIEDATUM_PROVINCIE = Ext.Date.parse(f.MUTATIEDATUM_PROVINCIE, 'd-m-Y H:i:s');
+            this.inputContainer.query("#provincie_mutatie")[0].setHtml(Ext.Date.format(f.MUTATIEDATUM_PROVINCIE, "d-m-Y") + " door " + f.MUT_PROVINCIE_DOOR);
         }
 
         if (f.MUTATIEDATUM_GEMEENTE) {
             f.MUTATIEDATUM_GEMEENTE = Ext.Date.parse(f.MUTATIEDATUM_GEMEENTE, 'd-m-Y H:i:s');
+            this.inputContainer.query("#gemeente_mutatie")[0].setHtml(Ext.Date.format(f.MUTATIEDATUM_GEMEENTE, "d-m-Y") + " door " + f.MUT_GEMEENTE_DOOR);
         }
         
         this.inputContainer.getForm().setValues(f);
@@ -298,7 +302,8 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                     margin: '0 5px',
                     labelAlign: 'top',
                     itemId: "toelichting",
-                    height: "300px",
+                    flex: 1,
+                    minHeight: 300,
                     listeners: {
                         afterrender: function(a){
                             a.focus();
@@ -309,9 +314,9 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                     }
                 },
                 {
-                    xtype: 'container', layout: {type: 'hbox'}, items: [
-                        { flex: 1, xtype: 'combobox', labelAlign: 'top', readOnly: isGemeente, name: 'CORRECTIE_STATUS_ID', margin: '0 5px', padding: '5px', fieldLabel: "Status", value: 1, displayField: "CORRECTIE_STATUS", valueField: "CS_ID", store: this.stores.statussen},
-                        { flex: 2, xtype: 'container', layout: { type: 'vbox', align: "stretch"}, items: [
+                    xtype: 'container', layout: { type: 'hbox', align: "stretch" }, padding: '0 0 8 0', items: [
+                        { width: 150, xtype: 'combobox', labelAlign: 'top', readOnly: isGemeente, name: 'CORRECTIE_STATUS_ID', margin: '0 5px', padding: '5px', fieldLabel: "Status", value: 1, displayField: "CORRECTIE_STATUS", valueField: "CS_ID", store: this.stores.statussen},
+                        { flex: 1, xtype: 'container', layout: { type: 'hbox', align: "stretch" }, padding: '8 0 0 10', items: [
                             this.getMutatieLayout("gemeente"),
                             this.getMutatieLayout("provincie")
                         ]}
@@ -352,32 +357,28 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         return this.inputContainer;
     },
     getMutatieLayout: function(type) {
-        var fieldProps = { datumName: 'MUTATIEDATUM_GEMEENTE', datumLabel: 'Laatste wijziging gemeente', doorName: 'MUT_GEMEENTE_DOOR' };
+        var fieldProps = { datumName: 'MUTATIEDATUM_GEMEENTE', itemId: 'gemeente_mutatie', label: 'Laatste wijziging gemeente', doorName: 'MUT_GEMEENTE_DOOR' };
         if (type === "provincie") {
-            fieldProps = { datumName: 'MUTATIEDATUM_PROVINCIE', datumLabel: 'Laatste wijziging provincie', doorName: 'MUT_PROVINCIE_DOOR' };
+            fieldProps = { datumName: 'MUTATIEDATUM_PROVINCIE', itemId: 'provincie_mutatie', label: 'Laatste wijziging provincie', doorName: 'MUT_PROVINCIE_DOOR' };
         }
         return {
             xtype: 'container',
-            layout: { type: 'hbox', pack: 'end', align: 'stretch' },
-            defaults: { margin: '0 5px', padding: '5px' },
+            flex: 1,
+            layout: { type: 'vbox', align: 'stretch' },
             items: [
+                { xtype: 'container', html: fieldProps.label },
+                { xtype: 'container', itemId: fieldProps.itemId, html: '', padding: '3 0 0 0' },
                 {
-                    xtype: 'datefield',
-                    flex: 1,
-                    readOnly:true,
-                    labelAlign: 'top',
+                    xtype: 'hidden',
+                    readOnly: true,
                     format: 'd-m-Y',
                     altFormats: 'd-m-y|d-m-Y H:i:s',
                     submitFormat: 'c',
-                    name: fieldProps.datumName,
-                    fieldLabel: fieldProps.datumLabel
+                    name: fieldProps.datumName
                 },
                 {
-                    xtype: 'textfield',
-                    flex: 1,
-                    readOnly:true,
-                    labelAlign: 'top',
-                    fieldLabel: "Naam",
+                    xtype: 'hidden',
+                    readOnly: true,
                     name: fieldProps.doorName
                 }
             ]
