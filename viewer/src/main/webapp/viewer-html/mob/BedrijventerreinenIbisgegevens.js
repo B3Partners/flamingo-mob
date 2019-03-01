@@ -31,6 +31,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     stores: {},
     storesLoading: 0,
     windowLoaded: false,
+    isEditing: false,
     config: {
         title: null,
         titlebarIcon: null,
@@ -186,6 +187,12 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     header: false,
                     store: this.stores.prijzen,
                     itemId: 'prijzen-grid',
+                    listeners: {
+                        scope: this,
+                        beforeselect: function() {
+                            return false;
+                        }
+                    },
                     plugins: {
                         ptype: 'cellediting',
                         clicksToEdit: 1,
@@ -237,6 +244,12 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     xtype: 'gridpanel',
                     viewConfig: {
                         markDirty: false
+                    },
+                    listeners: {
+                        scope: this,
+                        beforeselect: function() {
+                            return false;
+                        }
                     },
                     header: false,
                     store: this.stores.mutaties,
@@ -335,6 +348,12 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     itemId: 'oppervlak-grid',
                     header: false,
                     store: this.stores.oppervlak,
+                    listeners: {
+                        scope: this,
+                        beforeselect: function() {
+                            return false;
+                        }
+                    },
                     plugins: {
                         ptype: 'cellediting',
                         clicksToEdit: 1,
@@ -375,6 +394,12 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     xtype: 'gridpanel',
                     viewConfig: {
                         markDirty: false
+                    },
+                    listeners: {
+                        scope: this,
+                        beforeselect: function() {
+                            return false;
+                        }
                     },
                     header: false,
                     store: this.stores.uitgeefbaar,
@@ -458,6 +483,27 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     },
                     listeners: {
                         scope: this,
+                        beforeselect: function(selectionModel, record) {
+                            if (this.isEditing) {
+                                Ext.MessageBox.show({
+                                    title: 'U heeft nog niet opgeslagen',
+                                    message: 'U heeft wijzigingen aangebracht maar u heeft deze wijzigingen nog niet opgeslagen. ' +
+                                        'Als u wisselt van bedrijventerrein gaan niet opgeslagen wijzigingen verloren. ' +
+                                        'Weet u zeker dat u wilt wisselen van bedrijventerrein?',
+                                    buttons: Ext.Msg.YESNO,
+                                    icon: Ext.Msg.QUESTION,
+                                    scope: this,
+                                    fn: function(btn) {
+                                        if (btn === 'yes') {
+                                            this.showEditing(false);
+                                            selectionModel.select(record);
+                                        }
+                                    }
+                                });
+                                return false;
+                            }
+                            return true;
+                        },
                         select: function(grid, record) {
                             this.updateSelection(record);
                         }
@@ -760,6 +806,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         });
     },
     showEditing: function(edit) {
+        this.isEditing = edit;
         Ext.ComponentQuery.query("#edit-indicator")[0].update(edit ? "* is aangepast" : "");
     },
     updateSelection: function(bedrijventerrein) {
