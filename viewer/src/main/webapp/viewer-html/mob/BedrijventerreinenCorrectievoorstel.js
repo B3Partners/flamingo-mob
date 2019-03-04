@@ -140,6 +140,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         }
         if(user.roles.hasOwnProperty("gemeente")) {
             this.inputContainer.query("#save-button")[0].setDisabled( f.CORRECTIE_STATUS_ID !== 1);
+            this.inputContainer.query("#remove-button")[0].setDisabled( f.CORRECTIE_STATUS_ID !== 1);
         }else{
             this.inputContainer.query("#save-button")[0].setDisabled(false);
         }
@@ -277,6 +278,12 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             };
         
         }
+        
+        Ext.define('message', {
+            extend: 'Ext.data.Model',
+            fields: ['success']
+        });
+
         this.inputContainer = Ext.create('Ext.form.Panel', {
             flex: 1,
             scrollable: true,
@@ -347,10 +354,11 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                         this.reset();
                     }}
             ],
-            reader: new Ext.data.reader.Xml({ record : 'field', success: '@success' }),
+            reader: new Ext.data.reader.Xml({ rootNode:'message', model:"message", record : 'field', success: '@success' }),
             errorReader: new Ext.data.reader.Xml({
                     record : 'field',
-                    success: '@success'
+                    success: '@success',
+                    model:'message'
                 }, [
                     'id', 'msg'
                 ]
@@ -371,8 +379,9 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                 { xtype: 'container', html: fieldProps.label },
                 { xtype: 'container', itemId: fieldProps.itemId, html: '', padding: '3 0 0 0' },
                 {
-                    xtype: 'hidden',
+                    xtype: 'datefield',
                     readOnly: true,
+                    hidden:true,
                     format: 'd-m-Y',
                     altFormats: 'd-m-y|d-m-Y H:i:s',
                     submitFormat: 'c',
