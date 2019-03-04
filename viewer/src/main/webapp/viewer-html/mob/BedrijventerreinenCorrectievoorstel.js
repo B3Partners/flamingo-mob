@@ -211,9 +211,11 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         window.addEventListener("orientationchange", this.resizeListener);
         window.addEventListener("resize", this.resizeListener);
         Ext.on('resize', this.resizeListener);
+        if(this.verwachteUitgifte){
+            this.vubutton.setText("Verwachte uitgifte: " + this.verwachteUitgifte + " ha");
+        }
         if(this.ingediend){
             this.vubutton.setDisabled(true);
-            this.vubutton.setText("Ingediend: " + this.verwachteUitgifte + " ha");
         }
         this.buttonContainer.setLoading(false);
     },
@@ -415,7 +417,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         if (isGemeente) {
             this.vubutton = Ext.create('Ext.Button', {
                 text: 'Verwachte uitgifte',
-                disabled: this.uitgifteIngevuld,
+                disabled: this.ingediend,
                 listeners: {
                     scope: this,
                     click: this.showExpectedAllotmentWindow
@@ -441,7 +443,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         if (!this.buttonContainer) {
             return;
         }
-        var pos = [-20, 5];
+        var pos = [-80, 5];
         var align = 'tr';
         var mapContainer = Ext.get(this.config.viewerController.getMapId());
         this.buttonContainer.alignTo(mapContainer, [align, align].join('-'), pos);
@@ -608,6 +610,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                             var response = Ext.JSON.decode(result.responseText);
                             if (response.success) {
                                 Ext.MessageBox.alert(i18next.t('viewer_components_edit_40'), "Verwachte uitgifte ingediend.");
+                                this.vubutton.setText("Verwachte uitgifte: " + allotment + " ha");
                             } else {
                                 Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de verwachte uitgifte is mislukt. " + response.message);
                             }
@@ -642,6 +645,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                         success: function (result) {
                             var response = Ext.JSON.decode(result.responseText);
                             if (response.success) {
+                                this.vubutton.setDisabled(true);
                                 Ext.MessageBox.alert(i18next.t('viewer_components_edit_40'), "Correctievoorstellen ingediend.");
                             } else {
                                 Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de correctievoorstellen is mislukt. " + response.message);
