@@ -412,18 +412,18 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             }
         });
 
-        this.cvbutton = Ext.create('Ext.Button', {
-            text: 'Correctievoorstel',
-            disabled: this.ingediend,
-            listeners: {
-                scope: this,
-                click: this.newCorrection
-            }
-        });
 
         var user = FlamingoAppLoader.get("user");
         var isGemeente = user.roles.hasOwnProperty("gemeente");
         if (isGemeente) {
+            this.cvbutton = Ext.create('Ext.Button', {
+                text: 'Correctievoorstel',
+                disabled: this.ingediend,
+                listeners: {
+                    scope: this,
+                    click: this.newCorrection
+                }
+            });
             this.vubutton = Ext.create('Ext.Button', {
                 text: 'Verwachte uitgifte',
                 disabled: this.ingediend,
