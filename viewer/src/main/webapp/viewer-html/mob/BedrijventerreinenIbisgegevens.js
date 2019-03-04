@@ -130,8 +130,8 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             bbar: [
                 { xtype: 'container', itemId: 'edit-indicator' },
                 '->',
-                { xtype: 'button', text: 'Opslaan', itemId: 'next-button', scope: this, handler: function() { this.save(); } },
-                { xtype: 'button', text: 'Annuleren', scope: this, handler: function() { this.updateForms(); } },
+                { xtype: 'button', text: 'Opslaan', itemId: 'save-button', disabled:this.ibisIngediend, scope: this, handler: function() { this.save(); } },
+                { xtype: 'button', text: 'Annuleren', itemId:'cancel-button', disabled:this.ibisIngediend, scope: this, handler: function() { this.updateForms(); } },
                 '-',
                 { xtype: 'button', text: 'Help' }
             ]
@@ -512,12 +512,12 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     }
                 }
             ],
-            dockedItems: isProvincieUser ? [] : [{
+            dockedItems: isProvincieUser || this.ibisIngediend ? [] : [{
                 xtype: 'toolbar',
                 dock: 'bottom',
                 style: 'border-width: 1px 0 1px 1px !important;',
                 items: [
-                    { xtype: 'button', text: 'Indienen', flex: 1, scope: this, handler: this.submitConfirm }
+                    { xtype: 'button', text: 'Indienen', itemId:'indien-button', flex: 1, scope: this, handler: this.submitConfirm }
                 ]
             }]
         });
@@ -782,6 +782,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         var errorMessage = 'Het is helaas niet gelukt om in te dienen. Probeer het alstublieft opnieuw. Indien het probleem blijft bestaan, neem dan contact op met de beheerder van deze applicatie.';
         Ext.Ajax.request({
             url: actionBeans["mobeditfeature"],
+            scope:this,
             params: {
                 application: FlamingoAppLoader.get('appId'),
                 appLayer: this.layer,
@@ -792,6 +793,8 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             success: function (result) {
                 var response = Ext.JSON.decode(result.responseText);
                 if (response.success) {
+                    this.form.query("#save-button")[0].setDisabled(true);
+                    this.form.query("#cancel-button")[0].setDisabled(true);
                     Ext.MessageBox.show({
                         title: 'Gelukt',
                         message: "Ibisgegvens ingediend.",
