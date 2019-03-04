@@ -236,7 +236,7 @@ Ext.define ("viewer.components.BedrijventerreinenBase", {
                     scope.gemeente_code = response.GEM_CODE_CBS;
                     scope.peildatum_mob = response.MOB_PEILDATUM;
                     scope.ingediend = response.IND_CORRECTIES_INGEDIEND_JN === 'J';
-                    scope.uitgifteIngevuld = response.VERWACHTE_UITGIFTE !== null;
+                    scope.uitgifteIngevuld = response.VERWACHTE_UITGIFTE !== null && response.VERWACHTE_UITGIFTE !== undefined;
                     scope.verwachteUitgifte = response.VERWACHTE_UITGIFTE;
                     successFunction.call(scope);
                 } else {

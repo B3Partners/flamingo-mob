@@ -611,6 +611,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                             if (response.success) {
                                 Ext.MessageBox.alert(i18next.t('viewer_components_edit_40'), "Verwachte uitgifte ingediend.");
                                 this.vubutton.setText("Verwachte uitgifte: " + allotment + " ha");
+                                this.uitgifteIngevuld = true;
                             } else {
                                 Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de verwachte uitgifte is mislukt. " + response.message);
                             }
@@ -626,38 +627,43 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         });
     },
     confirmSubmitCorrections: function() {
-        Ext.MessageBox.show({
-            title: 'Weet u het zeker?',
-            message: 'Weet u zeker dat u alle opgeslagen correctievoorstellen wilt indienen?',
-            buttons: Ext.Msg.YESNO,
-            icon: Ext.Msg.QUESTION,
-            scope: this,
-            fn: function (btn) {
-                if (btn === 'yes') {
-                    Ext.Ajax.request({
-                        url: actionBeans["mobeditfeature"],
-                        scope: this,
-                        params: {
-                            submitCorrections: true,
-                            AGM_ID: this.agm_id,
-                            appLayer: this.layer
-                        },
-                        success: function (result) {
-                            var response = Ext.JSON.decode(result.responseText);
-                            if (response.success) {
-                                this.vubutton.setDisabled(true);
-                                Ext.MessageBox.alert(i18next.t('viewer_components_edit_40'), "Correctievoorstellen ingediend.");
-                            } else {
-                                Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de correctievoorstellen is mislukt. " + response.message);
+        if(!this.uitgifteIngevuld){
+            Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Vul eerst de verwachte uitgifte in.");
+        } else {
+            Ext.MessageBox.show({
+                title: 'Weet u het zeker?',
+                message: 'Weet u zeker dat u alle opgeslagen correctievoorstellen wilt indienen?',
+                buttons: Ext.Msg.YESNO,
+                icon: Ext.Msg.QUESTION,
+                scope: this,
+                fn: function (btn) {
+                    if (btn === 'yes') {
+                        Ext.Ajax.request({
+                            url: actionBeans["mobeditfeature"],
+                            scope: this,
+                            params: {
+                                submitCorrections: true,
+                                AGM_ID: this.agm_id,
+                                appLayer: this.layer
+                            },
+                            success: function (result) {
+                                var response = Ext.JSON.decode(result.responseText);
+                                if (response.success) {
+                                    this.ingediend = true;
+                                    this.vubutton.setDisabled(true);
+                                    Ext.MessageBox.alert(i18next.t('viewer_components_edit_40'), "Correctievoorstellen ingediend.");
+                                } else {
+                                    Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de correctievoorstellen is mislukt. " + response.message);
+                                }
+                            },
+                            failure: function (result) {
+                                Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de correctievoorstellen is mislukt. " + result.message);
                             }
-                        },
-                        failure: function (result) {
-                            Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de correctievoorstellen is mislukt. " + result.message);
-                        }
-                    });
+                        });
+                    }
                 }
-            }
-        });
+            });
+        }
     },
     getExtComponents: function () {
         if (this.container) {
