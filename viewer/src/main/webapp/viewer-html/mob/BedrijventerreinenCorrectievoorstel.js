@@ -133,8 +133,8 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         
         this.inputContainer.getForm().setValues(f);
         if(user.roles.hasOwnProperty("provincie")){
-            this.inputContainer.query("#uploadContainer")[0].setVisible (f.hasOwnProperty("UPLOAD"));
-            if(f.hasOwnProperty("UPLOAD")){
+            this.inputContainer.query("#uploadContainer")[0].setVisible (f.hasOwnProperty("BESTANDSNAAM"));
+            if(f.hasOwnProperty("BESTANDSNAAM")){
                 this.inputContainer.query("#downloadButton")[0].setText("Download " + f["BESTANDSNAAM"]);
             }
         }
