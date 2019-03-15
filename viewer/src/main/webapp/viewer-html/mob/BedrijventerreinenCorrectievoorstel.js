@@ -62,6 +62,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
 
         this.vectorLayer.addListener(viewer.viewercontroller.controller.Event.ON_FEATURE_ADDED, function () {
             this.container.show();
+            this.showDrawingHint(false);
         }, this);
         this.geometryEditable = true;
         this.config.allowDelete = true;
@@ -151,6 +152,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.resetForm();
         this.mode = "new";
         this.vectorLayer.drawFeature("Polygon");
+        this.showDrawingHint(true);
        //var feat = Ext.create(viewer.viewercontroller.controller.Feature, {wktgeom: "POLYGON((223790 504638,228844 508832.16,232661.12 504585,229166 502918,223790 504638))"});
         //this.vectorLayer.addFeatures([feat]);
     },
@@ -159,8 +161,18 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.inputContainer.reset();
         this.mode = "";
         this.config.viewerController.mapComponent.getMap().removeMarker("correctievoorstel");
+        this.showDrawingHint(false);
     },
-    
+    showDrawingHint: function(showHint) {
+        var hintContainer = this.buttonContainer.query("#draw-message")[0];
+        if (!hintContainer) return;
+        if (showHint) {
+            hintContainer.setHtml("Teken grens en sluit af met dubbelklik");
+            hintContainer.setHidden(false);
+        } else {
+            hintContainer.setHidden(true);
+        }
+    },
     loadWindow:function() {
         this.createButtons();
         var mask = this.buttonContainer.setLoading("Laden...");
@@ -399,24 +411,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.container.hide();
     },
     createButtons: function () {
-        this.buttonContainer = Ext.create('Ext.container.Container', {
-            renderTo: Ext.get(this.config.viewerController.getMapId()),
-            floating: true,
-            shadow: false,
-            defaults: {
-                margin: '5px'
-            },
-            style: {
-                zIndex: 1002,
-                padding: 5,
-                backgroundColor: "#FFFFFF",
-                borderColor: "#5FA2DD",
-                borderStyle: "solid"
-            },
-            border: 2
-        });
-
-
+        var buttons = [];
         var user = FlamingoAppLoader.get("user");
         var isGemeente = user.roles.hasOwnProperty("gemeente");
         if (isGemeente) {
@@ -445,11 +440,32 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                 }
             });
         }
-        this.buttonContainer.add(this.cvbutton);
+        buttons.push(this.cvbutton);
         if (isGemeente) {
-            this.buttonContainer.add(this.vubutton);
-            this.buttonContainer.add(this.indienbutton);
+            buttons.push(this.vubutton);
+            buttons.push(this.indienbutton);
         }
+        this.buttonContainer = Ext.create('Ext.container.Container', {
+            renderTo: Ext.get(this.config.viewerController.getMapId()),
+            floating: true,
+            shadow: false,
+            style: {
+                zIndex: 1002,
+                padding: 5,
+                backgroundColor: "#FFFFFF",
+                borderColor: "#5FA2DD",
+                borderStyle: "solid"
+            },
+            border: 2,
+            layout: {
+                type: 'vbox',
+                align: 'stretch'
+            },
+            items: [
+                { xtype: 'container', items: buttons, border: false, defaults: { margin: '5px' } },
+                { xtype: 'container', itemId: 'draw-message', margin: '8 5 5 5', html: '', hidden: true, style: { fontWeight: 'bold' } }
+            ]
+        });
         this.alignButtons();
     },
     alignButtons: function () {
