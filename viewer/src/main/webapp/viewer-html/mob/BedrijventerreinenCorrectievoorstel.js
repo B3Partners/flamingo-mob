@@ -666,7 +666,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         } else {
             Ext.MessageBox.show({
                 title: 'Weet u het zeker?',
-                message: 'Weet u zeker dat u alle opgeslagen correctievoorstellen wilt indienen?',
+                message: 'weet u zeker dat u alle opgeslagen correctievoorstellen en de verwachte uitgifte wilt indienen?',
                 buttons: Ext.Msg.YESNO,
                 icon: Ext.Msg.QUESTION,
                 scope: this,
