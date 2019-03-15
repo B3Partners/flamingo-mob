@@ -42,9 +42,19 @@ Ext.define("viewer.components.CustomConfiguration", {
                 queryMode: 'local',
                 displayField: 'alias',
                 valueField: 'id',
-                width: "100%",
+                width: 700,
                 value: this.configObject.layer || null
-            }]);
+            },
+            {
+                fieldLabel: "URL naar help document",
+                labelWidth: this.labelWidth,
+                name: "helpUrl",
+                id: "helpUrl",
+                xtype: "textfield",
+                width: 700,
+                value: this.configObject.helpUrl || null
+            }
+        ]);
     },
     getDefaultValues: function () {
         return {
