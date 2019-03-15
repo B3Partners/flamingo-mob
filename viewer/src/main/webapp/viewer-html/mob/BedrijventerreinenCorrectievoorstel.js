@@ -402,14 +402,18 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.buttonContainer = Ext.create('Ext.container.Container', {
             renderTo: Ext.get(this.config.viewerController.getMapId()),
             floating: true,
-            border: false,
             shadow: false,
             defaults: {
                 margin: '5px'
             },
             style: {
-                'zIndex': 1002
-            }
+                zIndex: 1002,
+                padding: 5,
+                backgroundColor: "#FFFFFF",
+                borderColor: "#5FA2DD",
+                borderStyle: "solid"
+            },
+            border: 2
         });
 
 
