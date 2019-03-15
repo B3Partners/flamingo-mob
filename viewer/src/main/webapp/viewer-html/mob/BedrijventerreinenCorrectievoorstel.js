@@ -594,7 +594,8 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                     xtype: 'numberfield',
                     fieldLabel: 'Verwachte uitgifte (hectare)',
                     itemId: 'uitgifte',
-                    labelWidth: 200
+                    labelWidth: 200,
+                    value: this.verwachteUitgifte || ""
                 }
             ],
             bbar: [
