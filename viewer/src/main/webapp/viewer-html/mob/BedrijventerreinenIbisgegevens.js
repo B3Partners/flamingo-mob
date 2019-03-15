@@ -536,13 +536,28 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     createColumnForm: function() {
         var items = Array.prototype.slice.call(arguments);
         var itemsConf = Ext.Array.map(items, function(item, idx) {
-            var conf = { xtype: 'fieldcontainer', flex: 1, defaults: { labelAlign: 'top' }, layout: { type: 'hbox', pack: 'start' }, items: [ item ], padding: '0 10 0 0' };
+            var conf = {
+                xtype: 'fieldcontainer',
+                flex: 1,
+                defaults: {
+                    labelAlign: 'top',
+                    listeners: {
+                        scope: this,
+                        change: function() {
+                            this.showEditing(true);
+                        }
+                    }
+                },
+                layout: { type: 'hbox', pack: 'start' },
+                items: [ item ],
+                padding: '0 10 0 0'
+            };
             if (idx === 1 && items.length === 2) {
                 // For two-col forms align the last item to the right
                 return Ext.Object.merge({}, conf, { layout: { pack: 'end' }, padding: '0 0 0 10' });
             }
             return conf;
-        });
+        }, this);
         var cols = {
             xtype: 'fieldcontainer',
             layout: {
