@@ -435,6 +435,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
 
             this.indienbutton = Ext.create('Ext.Button', {
                 text: 'Indienen',
+                disabled: this.ingediend,
                 listeners: {
                     click: this.confirmSubmitCorrections,
                     scope: this
