@@ -363,8 +363,9 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                         });
                     }},
                 {xtype: 'button', text: 'Annuleren', scope: this, handler: function () {
-                        this.reset();
-                    }}
+                    this.container.hide();
+                    this.reset();
+                }}
             ],
             reader: new Ext.data.reader.Xml({ rootNode:'message', model:"message", record : 'field', success: '@success' }),
             errorReader: new Ext.data.reader.Xml({
