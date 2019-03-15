@@ -112,6 +112,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         this.container.add(this.createTabForm());
         this.filterBedrijventerreinen();
         this.container.setLoading(false);
+        this.setDisabled(true);
     },
     createTabForm: function() {
         this.form = Ext.create('Ext.tab.Panel', {
@@ -490,18 +491,9 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                             if (this.isEditing) {
                                 Ext.MessageBox.show({
                                     title: 'U heeft nog niet opgeslagen',
-                                    message: 'U heeft wijzigingen aangebracht maar u heeft deze wijzigingen nog niet opgeslagen. ' +
-                                        'Als u wisselt van bedrijventerrein gaan niet opgeslagen wijzigingen verloren. ' +
-                                        'Weet u zeker dat u wilt wisselen van bedrijventerrein?',
-                                    buttons: Ext.Msg.YESNO,
-                                    icon: Ext.Msg.QUESTION,
-                                    scope: this,
-                                    fn: function(btn) {
-                                        if (btn === 'yes') {
-                                            this.showEditing(false);
-                                            selectionModel.select(record);
-                                        }
-                                    }
+                                    message: Ext.String.format('U hebt gemaakte wijzigingen in {0} nog niet opgeslagen', this.bedrijventerrein.get("BEDRIJVENTERREIN_LABEL")),
+                                    buttons: Ext.Msg.OK,
+                                    icon: Ext.Msg.INFO
                                 });
                                 return false;
                             }
@@ -848,6 +840,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         this.config.viewerController.mapComponent.getMap().zoomToExtent(extent);
         this.updateForms();
         this.form.setActiveTab(0);
+        this.setDisabled(false);
     },
     updateForms: function() {
         var bedrijventerrein = this.bedrijventerrein;
