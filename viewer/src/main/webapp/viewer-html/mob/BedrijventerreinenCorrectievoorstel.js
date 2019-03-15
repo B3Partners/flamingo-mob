@@ -441,9 +441,8 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                     scope: this
                 }
             });
-        }
-        buttons.push(this.cvbutton);
-        if (isGemeente) {
+
+            buttons.push(this.cvbutton);
             buttons.push(this.vubutton);
             buttons.push(this.indienbutton);
         }
