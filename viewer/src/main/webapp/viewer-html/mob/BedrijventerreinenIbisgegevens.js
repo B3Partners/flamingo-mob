@@ -817,7 +817,9 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     updateSelection: function(bedrijventerrein) {
         this.bedrijventerrein = bedrijventerrein;
         var feature = Ext.create('viewer.viewercontroller.controller.Feature', { wktgeom: bedrijventerrein.get("GEOMETRIE") });
-        this.config.viewerController.mapComponent.getMap().zoomToExtent(feature.getExtent());
+        var extent = feature.getExtent();
+        extent.buffer(150);
+        this.config.viewerController.mapComponent.getMap().zoomToExtent(extent);
         this.updateForms();
         this.form.setActiveTab(0);
     },
