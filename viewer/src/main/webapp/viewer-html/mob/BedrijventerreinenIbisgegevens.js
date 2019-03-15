@@ -475,6 +475,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     xtype: 'gridpanel',
                     flex: 1,
                     store: this.stores.bedrijventerreinen,
+                    itemId: 'bedrijventerreinen-grid',
                     columns: [
                         { text: 'Bedrijventerrein', dataIndex: 'BEDRIJVENTERREIN_LABEL', flex: 1 }
                     ],
@@ -747,7 +748,17 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 var response = Ext.JSON.decode(result.responseText);
                 if (response.success) {
                     this.showEditing(false);
-                    this.stores.bedrijventerreinen.load();
+                    var currently_selected = this.bedrijventerrein.get("RIN_NUMMER");
+                    this.stores.bedrijventerreinen.load({
+                        scope: this,
+                        callback: function (records, operation, success) {
+                            var selected = Ext.Array.findBy(records, function(record) { return record.get("RIN_NUMMER") === currently_selected });
+                            if (selected) {
+                                Ext.ComponentQuery.query("#bedrijventerreinen-grid")[0].getSelectionModel().select(selected);
+                                this.updateSelection(selected);
+                            }
+                        }
+                    });
                     Ext.MessageBox.show({
                         title: 'Gelukt',
                         message: "Ibisgegevens opgeslagen",
