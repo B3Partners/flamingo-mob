@@ -140,6 +140,15 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             }
         }
         if(user.roles.hasOwnProperty("gemeente")) {
+            if(f.hasOwnProperty("BESTANDSNAAM")){
+                var uploadContainer = this.inputContainer.query("#uploadContainer")[0];
+                uploadContainer.setFieldLabel("Upload (huidig: " + f["BESTANDSNAAM"] + ")");
+                Ext.tip.QuickTipManager.unregister(uploadContainer.getId());
+                Ext.tip.QuickTipManager.register({
+                    target: uploadContainer.getId(),
+                    text  : 'Er is al een bestand ge-upload.<br />Huidige bestand: ' + f["BESTANDSNAAM"] + '.<br />U kunt een nieuw een bestand uploaden.'
+                });
+            }
             this.inputContainer.query("#save-button")[0].setDisabled( f.CORRECTIE_STATUS_ID !== 1);
             this.inputContainer.query("#remove-button")[0].setDisabled( f.CORRECTIE_STATUS_ID !== 1);
         }else{
