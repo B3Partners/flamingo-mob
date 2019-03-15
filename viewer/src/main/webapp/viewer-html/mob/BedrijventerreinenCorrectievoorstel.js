@@ -606,9 +606,9 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                     listeners: {
                         scope: this,
                         click: function (btn) {
-                            var allotment = btn.ownerCt.ownerCt.query("#uitgifte")[0].getValue();
+                            var allotment = uitgifteWindow.query("#uitgifte")[0].getValue();
                             if (allotment) {
-                                this.confirmExpectedAllotment(allotment, uitgifteWindow);
+                                this.submitExpectedAllotment(allotment, uitgifteWindow);
                             } else {
                                 Ext.MessageBox.alert("Fout", "Hoeveelheid hectare is niet ingevuld.");
                             }
@@ -628,32 +628,35 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             scope: this,
             fn: function (btn) {
                 if (btn === 'yes') {
-                    Ext.Ajax.request({
-                        url: actionBeans["mobeditfeature"],
-                        scope: this,
-                        params: {
-                            submitExpectedAllotment: true,
-                            uitgifte: allotment,
-                            AGM_ID: this.agm_id,
-                            appLayer: this.layer
-                        },
-                        success: function (result) {
-                            var response = Ext.JSON.decode(result.responseText);
-                            if (response.success) {
-                                Ext.MessageBox.alert(i18next.t('viewer_components_edit_40'), "Verwachte uitgifte ingediend.");
-                                this.vubutton.setText("Verwachte uitgifte: " + allotment + " ha");
-                                this.uitgifteIngevuld = true;
-                            } else {
-                                Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de verwachte uitgifte is mislukt. " + response.message);
-                            }
-                            uitgifteWindow.hide();
-                        },
-                        failure: function (result) {
-                            Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de verwachte uitgifte is mislukt. " + result.message);
-                            uitgifteWindow.hide();
-                        }
-                    });
+                    this.submitExpectedAllotment(allotment, uitgifteWindow);
                 }
+            }
+        });
+    },
+    submitExpectedAllotment: function(allotment, uitgifteWindow) {
+        Ext.Ajax.request({
+            url: actionBeans["mobeditfeature"],
+            scope: this,
+            params: {
+                submitExpectedAllotment: true,
+                uitgifte: allotment,
+                AGM_ID: this.agm_id,
+                appLayer: this.layer
+            },
+            success: function (result) {
+                var response = Ext.JSON.decode(result.responseText);
+                if (response.success) {
+                    Ext.MessageBox.alert(i18next.t('viewer_components_edit_40'), "Verwachte uitgifte ingediend.");
+                    this.vubutton.setText("Verwachte uitgifte: " + allotment + " ha");
+                    this.uitgifteIngevuld = true;
+                } else {
+                    Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de verwachte uitgifte is mislukt. " + response.message);
+                }
+                uitgifteWindow.hide();
+            },
+            failure: function (result) {
+                Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de verwachte uitgifte is mislukt. " + result.message);
+                uitgifteWindow.hide();
             }
         });
     },
