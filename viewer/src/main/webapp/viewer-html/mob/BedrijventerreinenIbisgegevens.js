@@ -289,6 +289,16 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                                 "HOOFDOORZAAK_VEROUD_CODE": ""
                             });
                         }
+                        if (field.getName() === "HERSTRUCT_PLAN_TYPE_CODE" && (field.getValue() === "N" || field.getValue() === "X")) {
+                            this.bereikbaarheidForm.getForm().setValues({
+                                "HERSTRUCT_FASE_CODE": "",
+                                "OPP_FACELIFT": "",
+                                "OPP_REVITALISATIE": "",
+                                "OPP_ZWARE_REVITALISATIE": "",
+                                "OPP_HERPROFILERING": "",
+                                "OPP_TRANSFORMATIE": ""
+                            });
+                        }
                     }
                 }
             },
@@ -708,6 +718,25 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             (formData.HERSTRUCT_PLAN_TYPE_CODE === "F" && formData.OPP_TRANSFORMATIE === "")
         ) {
             bereikbaarheid_validation.push("Vul de oppervlakte in, passend bij het gekozen Herstructereringsplan");
+        }
+        var bruto_oppervlak = +(this.bedrijventerrein.get("AFGESPR_AANBOD_OPP"));
+        if (formData.BRUTO_OPP_VEROUDERD && bruto_oppervlak < +(formData.BRUTO_OPP_VEROUDERD)) {
+            bereikbaarheid_validation.push(Ext.String.format("Bruto oppervlakte veroudering moet kleiner of gelijk zijn aan bruto oppervlak ({0} ha)", bruto_oppervlak));
+        }
+        if (formData.OPP_FACELIFT && bruto_oppervlak < +(formData.OPP_FACELIFT)) {
+            bereikbaarheid_validation.push(Ext.String.format("Oppervlakte facelift moet kleiner of gelijk zijn aan bruto oppervlak ({0} ha)", bruto_oppervlak));
+        }
+        if (formData.OPP_REVITALISATIE && bruto_oppervlak < +(formData.OPP_REVITALISATIE)) {
+            bereikbaarheid_validation.push(Ext.String.format("Oppervlakte revitalisatie moet kleiner of gelijk zijn aan bruto oppervlak ({0} ha)", bruto_oppervlak));
+        }
+        if (formData.OPP_ZWARE_REVITALISATIE && bruto_oppervlak < +(formData.OPP_ZWARE_REVITALISATIE)) {
+            bereikbaarheid_validation.push(Ext.String.format("Oppervlakte zware revitalisatie moet kleiner of gelijk zijn aan bruto oppervlak ({0} ha)", bruto_oppervlak));
+        }
+        if (formData.OPP_HERPROFILERING && bruto_oppervlak < +(formData.OPP_HERPROFILERING)) {
+            bereikbaarheid_validation.push(Ext.String.format("Oppervlakte herprofilering moet kleiner of gelijk zijn aan bruto oppervlak ({0} ha)", bruto_oppervlak));
+        }
+        if (formData.OPP_TRANSFORMATIE && bruto_oppervlak < +(formData.OPP_TRANSFORMATIE)) {
+            bereikbaarheid_validation.push(Ext.String.format("Oppervlakte transformatie moet kleiner of gelijk zijn aan bruto oppervlak ({0} ha)", bruto_oppervlak));
         }
         this.clearMessagesInContainer("#algemeen-errors");
         this.clearMessagesInContainer("#bereikbaarheid-errors");
