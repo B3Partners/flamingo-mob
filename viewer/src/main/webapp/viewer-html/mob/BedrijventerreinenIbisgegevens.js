@@ -783,9 +783,14 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         });
     },
     submitConfirm: function() {
+        var gemeente = this.stores.gemeentes.findRecord("GEM_CODE_CBS", this.gemeente_code);
+        var gemeente_naam = "";
+        if (gemeente) {
+            gemeente_naam = gemeente.get("GEMEENTE_NAAM");
+        }
         Ext.MessageBox.show({
-            title: 'Weet u het zeker?',
-            message: 'Weet u zeker dat u wilt indienen? Hierna aanpassen is niet meer mogelijk',
+            title: 'Gegevens van alle bedrijventerreinen indienen',
+            message: Ext.String.format('Hiermee dient u alle bedrijventerreinen binnen de gemeente {0} in', gemeente_naam),
             buttons: Ext.Msg.YESNO,
             icon: Ext.Msg.QUESTION,
             scope: this,
