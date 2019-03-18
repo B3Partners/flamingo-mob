@@ -540,6 +540,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         return container;
     },
     createTooltips: function () {
+        Ext.QuickTips.init();
         Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=KERN_NAAM]")[0].getEl(), text: "Naam van de woonkern volgens de woonplaatsenlijst waarin of waarbij de werklocatie gelegen is."});
         Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=PLAN_FASE_CODE]")[0].getEl(), text: "Naam van de woonkern volgens de woonplaatsenlijst waarin of waarbij de werklocatie gelegen is."});
         Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=GEM_CODE_CBS]")[0].getEl(), text: "Beheerder van het bedrijventerrein."});
