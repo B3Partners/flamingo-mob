@@ -428,6 +428,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             this.cvbutton = Ext.create('Ext.Button', {
                 text: 'Correctievoorstel',
                 disabled: this.ingediend,
+                tooltip: "Een correctievoorstel aanmaken",
                 listeners: {
                     scope: this,
                     click: this.newCorrection
@@ -436,6 +437,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             this.vubutton = Ext.create('Ext.Button', {
                 text: 'Verwachte uitgifte',
                 disabled: this.ingediend,
+                tooltip: "Verwachte uitgifte voor het volgende half jaar (vanaf peildatum meting) opgeven.",
                 listeners: {
                     scope: this,
                     click: this.showExpectedAllotmentWindow
@@ -445,6 +447,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             this.indienbutton = Ext.create('Ext.Button', {
                 text: 'Indienen',
                 disabled: this.ingediend,
+                tooltip: "Alle correctievoorstellen en verwachte uitgifte indienen.",
                 listeners: {
                     click: this.confirmSubmitCorrections,
                     scope: this

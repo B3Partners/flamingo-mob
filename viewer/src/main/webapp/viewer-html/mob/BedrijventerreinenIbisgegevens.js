@@ -112,6 +112,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         this.container.add(this.createFilterContainer());
         this.container.add(this.createTabForm());
         this.filterBedrijventerreinen();
+        this.createTooltips();
         this.container.setLoading(false);
         this.setDisabled(true);
     },
@@ -218,10 +219,11 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                             flex: .5,
                             align: 'end',
                             scope: this,
-                            renderer: function (value, metaData) {
+                            renderer: function (value, metaData, record) {
                                 if (!this.disabled) {
                                     metaData.tdCls = "bedrijventerreinen-editable";
                                 }
+                                metaData.tdAttr = Ext.String.format('data-qtip="Minimum {0}"', record.data.tt );
                                 return value;
                             }
                         },
@@ -232,10 +234,11 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                             flex: .5,
                             align: 'end',
                             scope: this,
-                            renderer: function (value, metaData) {
+                            renderer: function (value, metaData, record) {
                                 if (!this.disabled) {
                                     metaData.tdCls = "bedrijventerreinen-editable";
                                 }
+                                metaData.tdAttr = Ext.String.format('data-qtip="Maximum {0}"', record.data.tt );
                                 return value;
                             }
                         }
@@ -396,12 +399,13 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                                 if (!this.disabled && record.get("editable")) {
                                     metaData.tdCls = "bedrijventerreinen-editable";
                                 }
+                                metaData.tdAttr = Ext.String.format('data-qtip="{0}"', record.data.tt);
                                 return value;
                             }
                         }
                     ],
                     margin: '0 0 10 0'
-                },
+                    },
                 {
                     xtype: 'gridpanel',
                     viewConfig: {
@@ -417,8 +421,16 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     store: this.stores.uitgeefbaar,
                     columns: [
                         { header: '', dataIndex: 'label', flex: 1 },
-                        { header: 'Gemeente', dataIndex: 'overheid', flex: .5, align: 'end' },
-                        { header: 'Particulier', dataIndex: 'particulier', flex: .5, align: 'end' }
+                        { header: 'Gemeente', dataIndex: 'overheid', flex: .5, align: 'end',
+                            renderer: function (value, metaData, record) {
+                                metaData.tdAttr = Ext.String.format('data-qtip="{0} {1}"', record.data.tt, "gemeentelijk eigendom (in ha).");
+                                return value;
+                            } },
+                        { header: 'Particulier', dataIndex: 'particulier', flex: .5, align: 'end',
+                            renderer: function (value, metaData, record) {
+                                metaData.tdAttr = Ext.String.format('data-qtip="{0} {1}"', record.data.tt, "particulier eigendom (in ha).");
+                                return value;
+                            } }
                     ],
                     margin: '0 0 10 0'
                 },
@@ -521,11 +533,34 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 dock: 'bottom',
                 style: 'border-width: 1px 0 1px 1px !important;',
                 items: [
-                    { xtype: 'button', text: 'Indienen', itemId:'indien-button', flex: 1, scope: this, handler: this.submitConfirm }
+                    { xtype: 'button', text: 'Indienen', tooltip:"Wijzigingen van alle bedrijventerreinen indienen.", itemId:'indien-button', flex: 1, scope: this, handler: this.submitConfirm }
                 ]
             }]
         });
         return container;
+    },
+    createTooltips: function () {
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=KERN_NAAM]")[0].getEl(), text: "Naam van de woonkern volgens de woonplaatsenlijst waarin of waarbij de werklocatie gelegen is."});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=PLAN_FASE_CODE]")[0].getEl(), text: "Naam van de woonkern volgens de woonplaatsenlijst waarin of waarbij de werklocatie gelegen is."});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=GEM_CODE_CBS]")[0].getEl(), text: "Beheerder van het bedrijventerrein."});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=WERKLOCATIE_TYPE_CODE]")[0].getEl(), text: "Terrein dat vanwege zijn bestemming bestemd en geschikt is voor gebruik door handel, nijverheid, commerciële en niet-commerciële dienstverlening en industrie."});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=IND_PARK_MANAGEMENT]")[0].getEl(), text: "Aanwezigheid (score wel of niet) van een (gezamenlijke) beheerorganisatie."});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=IND_MILIEUZONERING]")[0].getEl(), text: "Indien de gemeente in het kader van de vaststelling of herziening van een bestemmingsplan besluit om op een werklocatie zogenaamde grote lawaaimakers toe te laten, moet een geluidzone rond de werklocatie worden vastgesteld."});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=MAX_MILEUCATEGORIE_CODE]")[0].getEl(), text: "De maximaal toegestane milieucategorie volgens de indeling in 'Bedrijven en Milieuzonering' (editie 2009)."});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=START_JAAR]")[0].getEl(), text: "Het jaar waarop de eerste kavel op de werklocatie verkocht of in erfpacht uitgegeven is."});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=JAAR_NIET_TERSTOND_UITG_GEM]")[0].getEl(), text: "Bij zachte plannen: wat is het beoogde jaar dat de gronden bouwrijp zijn?"});
+
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=SPOOR_ONTSLUITING_CODE]")[0].getEl(), text: "Wordt de werklocatie, naast ontsluiting via de weg, ook ontsloten door spoor?"});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=WATER_ONTSLUITING_CODE]")[0].getEl(), text: "Wordt de werklocatie, naast ontsluiting via de weg, ook ontsloten door water?"});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=EXT_BEREIKBAARHEID_CODE]")[0].getEl(), text: "Indicatoren zijn filedruk en de afstand tot de snelweg."});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=PARKEERGELEGENHED_CODE]")[0].getEl(), text: "Indicator is de infrastructuur, vanwege eenduidig en algemene onderschreven belang van deze indicator als maat voor interne bereikbaarheid. Het gaat hierbij om handvatten om zo goed mogelijk de bereikbaarheid te objectiveren."});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=IND_VEROUDERD]")[0].getEl(), text: "Is (een deel van) de werklocatie verouderd?"});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=HOOFDOORZAAK_VEROUD_CODE]")[0].getEl(), text: "Wat is de hoofdoorzaak van de veroudering? (type veroudering)"});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=BRUTO_OPP_VEROUDERD]")[0].getEl(), text: "Wat is het bruto oppervlak van de veroudering?"});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=HERSTRUCT_PLAN_TYPE_CODE]")[0].getEl(), text: "Is er een herstructureringsplan?"});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=HERSTRUCT_FASE_CODE]")[0].getEl(), text: "In welke fase bevindt het herstructureringsplan zich?"});
+        
+        
     },
     filterBedrijventerreinen: function(gemeente, peildatum) {
         if (gemeente) this.gemeente_code = gemeente;
@@ -604,8 +639,8 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 { 'name': 'max', 'type': 'number' }
             ],
             data: [
-                { id: 'verkoopprijs', label: 'Verkoopprijs', min: '', max: '' },
-                { id: 'erfpachtprijs', label: 'Erfpachtprijs', min: '', max: '' }
+                { id: 'verkoopprijs', label: 'Verkoopprijs', min: '', max: '', tt:"verkoopprijs grond per m² (in € exclusief BTW)." },
+                { id: 'erfpachtprijs', label: 'Erfpachtprijs', min: '', max: '', tt:" erfpachtprijs grond per m² (in € exclusief BTW)." }
             ]
         });
         var mutationStore = Ext.create('Ext.data.Store', {
@@ -623,19 +658,19 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 { 'name': 'editable', 'type': 'boolean', 'defaultValue': false }
             ],
             data: [
-                { id: 'bruto', label: 'Bruto', oppervlak: '' },
-                { id: 'netto', label: 'Netto', oppervlak: '' },
-                { id: 'uitgegeven', label: 'Uitgegeven', oppervlak: '' },
-                { id: 'uitgifte_huidig_jaar', label: 'Uitgifte huidig jaar', oppervlak: '' },
-                { id: 'terugkoop', label: 'Terugkoop', oppervlak: '', editable: true }
+                { id: 'bruto', label: 'Bruto', oppervlak: '', tt:"Bruto oppervlakte (in ha) van de werklocatie." },
+                { id: 'netto', label: 'Netto', oppervlak: '', tt:"Netto oppervlakte (in ha) van de werklocatie." },
+                { id: 'uitgegeven', label: 'Uitgegeven', oppervlak: '', tt:"De uitgegeven oppervlakte (in netto ha) van de werklocatie tot een jaar voorafgaand aan de peildatum." },
+                { id: 'uitgifte_huidig_jaar', label: 'Uitgifte huidig jaar', oppervlak: '', tt:"Uitgegeven oppervlak werklocatieterrein (in ha) in het afgelopen peiljaar." },
+                { id: 'terugkoop', label: 'Terugkoop', oppervlak: '', editable: true, tt:"Teruggekochte oppervlakte (in ha) in gemeentelijke eigendom." }
             ]
         });
         var uitgeefbaarStore = Ext.create('Ext.data.Store', {
             fields: [ 'label', 'overheid', 'particulier' ],
             data: [
-                { id: 'terstond_uitgeefbaar', label: 'Terstond uitgeefbaar', overheid: '', particulier: '' },
-                { id: 'niet_terstond_uitgeefbaar', label: 'Niet terstond uitgeefbaar', overheid: '', particulier: '' },
-                { id: 'grootst_uitgeefbaar_deel', label: 'Grootst uitgeefbaar deel', overheid: '', particulier: '' }
+                { id: 'terstond_uitgeefbaar', label: 'Terstond uitgeefbaar', overheid: '', particulier: '', tt: 'Aanbod bouwrijpe werklocaties in ' },
+                { id: 'niet_terstond_uitgeefbaar', label: 'Niet terstond uitgeefbaar', overheid: '', particulier: '', tt: 'Aanbod niet-bouwrijpe werklocaties in ' },
+                { id: 'grootst_uitgeefbaar_deel', label: 'Grootst uitgeefbaar deel', overheid: '', particulier: '', tt: 'Netto oppervlakte van het grootste aaneengesloten uitgeefbaar deel in '}
             ]
         });
         this.stores = {
