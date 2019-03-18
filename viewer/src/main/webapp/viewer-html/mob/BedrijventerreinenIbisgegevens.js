@@ -754,7 +754,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         ) {
             bereikbaarheid_validation.push("Vul de oppervlakte in, passend bij het gekozen Herstructereringsplan");
         }
-        var bruto_oppervlak = +(this.bedrijventerrein.get("AFGESPR_AANBOD_OPP"));
+        var bruto_oppervlak = +(this.bedrijventerrein.get("BRUTO_OPP"));
         if (formData.BRUTO_OPP_VEROUDERD && bruto_oppervlak < +(formData.BRUTO_OPP_VEROUDERD)) {
             bereikbaarheid_validation.push(Ext.String.format("Bruto oppervlakte veroudering moet kleiner of gelijk zijn aan bruto oppervlak ({0} ha)", bruto_oppervlak));
         }
@@ -956,16 +956,16 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             'IND_VOL': bedrijventerrein.get("IND_VOL")
         });
         this.updateGrid(this.stores.oppervlak, {
-            bruto: { oppervlak: bedrijventerrein.get("AFGESPR_AANBOD_OPP") },
-            netto: { oppervlak: bedrijventerrein.get("AFGESPR_NETTO_OPP") },
+            bruto: { oppervlak: bedrijventerrein.get("BRUTO_OPP") },
+            netto: { oppervlak: bedrijventerrein.get("NETTO_OPP") },
             uitgegeven: { oppervlak: bedrijventerrein.get("UITGEGEVEN_OPP") },
-            // uitgifte_huidig_jaar: { oppervlak: bedrijventerrein.get() },
+            uitgifte_huidig_jaar: { oppervlak: bedrijventerrein.get("UITGIFTE_HUIDIG_PEILJAAR_OPP") },
             terugkoop: { oppervlak: bedrijventerrein.get("OPP_TERUGKOOP_GEMEENTE") }
         });
         this.updateGrid(this.stores.uitgeefbaar, {
-            terstond_uitgeefbaar: { overheid: bedrijventerrein.get("UITGEEFBAAR_OVERH_OPP"), particuler: bedrijventerrein.get("UITGEEFBAAR_PART_OPP") }
+            terstond_uitgeefbaar: { overheid: bedrijventerrein.get("UITGEEFBAAR_OVERH_OPP"),particuler: bedrijventerrein.get("UITGEEFBAAR_PART_OPP") },
             // niet_terstond_uitgeefbaar: { overheid: '', particuler: '' },
-            // grootst_uitgeefbaar_deel: { overheid: '', particuler: '' }
+            grootst_uitgeefbaar_deel: { overheid: bedrijventerrein.get("GROOTST_UITGEEFB_DEEL_OPP"), particuler: '' }
         });
         this.showEditing(false);
     },
