@@ -208,13 +208,14 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     },
 
     initComp: function () {
+        this.formattedPeildatumMob = Ext.Date.format(Ext.Date.parse(this.peildatum_mob, "Y-m-d"), 'd-m-Y');
         this.container = Ext.create('Ext.window.Window', {
             layout: {
                 type: 'hbox',
                 align: 'stretch'
             },
             width: 600,
-            title: 'Correctievoorstel   - Peildatum ' + this.peildatum_mob,
+            title: 'Correctievoorstel   - Peildatum ' + this.formattedPeildatumMob,
             closeAction: "hide",
             height: 610,
             padding: '5px',
@@ -602,11 +603,11 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             title: 'Invoeren verwachte uitgifte',
             height: 200,
             modal: true,
-            width: 400,
+            width: 700,
             items: [
                 {
                     xtype: 'label',
-                    text: 'Hier komt een tekst'
+                    text: 'Vul hier in wat de verwachte uitgifte is voor het komende half jaar gerekend vanaf ' + this.formattedPeildatumMob + '. Een kavel is uitgegeven als de koopakte is gepasseerd bij de notaris. Het gaat hierbij alleen om kavels die in de afspraken zitten.'
                 },
                 {
                     xtype: 'numberfield',
@@ -664,7 +665,6 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             success: function (result) {
                 var response = Ext.JSON.decode(result.responseText);
                 if (response.success) {
-                    Ext.MessageBox.alert(i18next.t('viewer_components_edit_40'), "Verwachte uitgifte ingediend.");
                     this.vubutton.setText("Verwachte uitgifte: " + allotment + " ha");
                     this.uitgifteIngevuld = true;
                 } else {
