@@ -901,7 +901,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     },
     showEditing: function(edit) {
         this.isEditing = edit;
-        Ext.ComponentQuery.query("#edit-indicator")[0].update(edit ? "* is aangepast" : "");
+        Ext.ComponentQuery.query("#edit-indicator")[0].update(edit ? "* tabblad is aangepast" : "");
     },
     updateSelection: function(bedrijventerrein) {
         this.bedrijventerrein = bedrijventerrein;
