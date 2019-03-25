@@ -146,7 +146,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                 Ext.tip.QuickTipManager.unregister(uploadContainer.getId());
                 Ext.tip.QuickTipManager.register({
                     target: uploadContainer.getId(),
-                    text  : 'Er is al een bestand ge-upload.<br />Huidige bestand: ' + f["BESTANDSNAAM"] + '.<br />U kunt een nieuw een bestand uploaden.'
+                    text  : 'Er is al een bestand ge-upload.<br />Huidige bestand: ' + f["BESTANDSNAAM"] + '.<br />U kunt een nieuw een bestand uploaden (het oude bestand wordt overschreven).'
                 });
             }
             this.inputContainer.query("#save-button")[0].setDisabled( f.CORRECTIE_STATUS_ID !== 1);
