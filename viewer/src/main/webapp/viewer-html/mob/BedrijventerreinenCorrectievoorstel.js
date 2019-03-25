@@ -237,7 +237,9 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             this.vubutton.setText("Verwachte uitgifte: " + this.verwachteUitgifte + " ha");
         }
         if(this.ingediend){
+            this.cvbutton.setDisabled(true);
             this.vubutton.setDisabled(true);
+            this.indienbutton.setDisabled(true);            
         }
         this.buttonContainer.setLoading(false);
     },
@@ -696,7 +698,9 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                                 var response = Ext.JSON.decode(result.responseText);
                                 if (response.success) {
                                     this.ingediend = true;
+                                    this.cvbutton.setDisabled(true);
                                     this.vubutton.setDisabled(true);
+                                    this.indienbutton.setDisabled(true);
                                     Ext.MessageBox.alert(i18next.t('viewer_components_edit_40'), "Correctievoorstellen ingediend.");
                                 } else {
                                     Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "Het indienen van de correctievoorstellen is mislukt. " + response.message);
