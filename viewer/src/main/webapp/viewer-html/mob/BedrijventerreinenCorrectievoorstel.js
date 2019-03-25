@@ -326,6 +326,10 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                     ]
                 },
                 {
+                    xtype:"hiddenfield",
+                    name: "AGM_ID"
+                },
+                {
                     xtype: "textarea",
                     name: "TOELICHTING",
                     fieldLabel: "Toelichting",
@@ -567,7 +571,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         });
     },
     changeFeatureBeforeSave: function (f) {
-        f.AGM_ID = this.agm_id;
+        f.AGM_ID = this.agm_id ? this.agm_id : f.AGM_ID;
         
         var user = FlamingoAppLoader.get("user");
         if (user.roles.hasOwnProperty("gemeente")) {

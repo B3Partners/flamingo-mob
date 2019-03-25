@@ -154,6 +154,23 @@ public class MOBEditActionBean extends EditFeatureActionBean {
         //  Resolution r = saveRelatedFeatures();
         setFeature(meting);
         edit();
+        
+        HttpServletRequest req = getContext().getRequest();
+        
+        if(req.isUserInRole("provincie") &&  jsonFeature.getInt("CORRECTIE_STATUS_ID") == 1){
+
+            try {
+                EntityManager em = Stripersist.getEntityManager();
+                Layer l = getAppLayer().getService().getLayer(getAppLayer().getLayerName(), em);
+                AGM_ID = jsonFeature.getInt("AGM_ID");
+                FeatureSource fs = l.getFeatureType().openGeoToolsFeatureSource();
+                SimpleFeatureStore d = (SimpleFeatureStore) fs;
+                JSONObject json = new JSONObject();
+                submitAfspraakgebiedMetingen(d, json, false);
+            } catch (Exception ex) {
+                log.error("Cannot reset afspraakgebiedmetingen to ingediend = N");
+            }
+        }
 
         // See https://docs.sencha.com/extjs/6.2.0/classic/Ext.form.action.Submit.html for error response
         return new StreamingResolution("text/xml", new StringReader(
@@ -371,7 +388,7 @@ public class MOBEditActionBean extends EditFeatureActionBean {
 
             try {
                 if (submitCorrectieVoorstellen(d, json)) {
-                    json.put("success", submitAfspraakgebiedMetingen(d, json));
+                    json.put("success", submitAfspraakgebiedMetingen(d, json, true));
                 }
             } finally {
                 fs.getDataStore().dispose();
@@ -404,7 +421,7 @@ public class MOBEditActionBean extends EditFeatureActionBean {
         }
     }
 
-    private boolean submitAfspraakgebiedMetingen(SimpleFeatureStore mainFs, JSONObject json) throws IOException {
+    private boolean submitAfspraakgebiedMetingen(SimpleFeatureStore mainFs, JSONObject json, boolean ingediend) throws IOException {
         DataAccess da = mainFs.getDataStore();
         FeatureSource fs = da.getFeatureSource(new NameImpl("AFSPRAAKGEB_METINGEN"));
 
@@ -417,7 +434,7 @@ public class MOBEditActionBean extends EditFeatureActionBean {
 
             FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2(GeoTools.getDefaultHints());
             Filter f = ff.id(new FeatureIdImpl(AGM_ID.toString()));
-            d.modifyFeatures("IND_CORRECTIES_INGEDIEND_JN", "J", f);
+            d.modifyFeatures("IND_CORRECTIES_INGEDIEND_JN", ingediend ? "J" : "N", f);
             transaction.commit();
 
             json.put("success", true);
