@@ -38,7 +38,6 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         tooltip: null,
         label: "",
         layer: null,
-        helpUrl: null,
         details: {
             minWidth: 700,
             minHeight: 400,
@@ -134,9 +133,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 { xtype: 'container', itemId: 'edit-indicator' },
                 '->',
                 { xtype: 'button', text: 'Opslaan', itemId: 'save-button', disabled:this.ibisIngediend, scope: this, handler: function() { this.save(); } },
-                { xtype: 'button', text: 'Annuleren', itemId:'cancel-button', disabled:this.ibisIngediend, scope: this, handler: function() { this.updateForms(); } },
-                '-',
-                { xtype: 'button', text: 'Help', href: this.config.helpUrl }
+                { xtype: 'button', text: 'Annuleren', itemId:'cancel-button', disabled:this.ibisIngediend, scope: this, handler: function() { this.updateForms(); } }
             ]
         });
         return this.form;

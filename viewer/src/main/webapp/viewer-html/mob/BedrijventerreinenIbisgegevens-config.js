@@ -44,15 +44,6 @@ Ext.define("viewer.components.CustomConfiguration", {
                 valueField: 'id',
                 width: 700,
                 value: this.configObject.layer || null
-            },
-            {
-                fieldLabel: "URL naar help document",
-                labelWidth: this.labelWidth,
-                name: "helpUrl",
-                id: "helpUrl",
-                xtype: "textfield",
-                width: 700,
-                value: this.configObject.helpUrl || null
             }
         ]);
     },
