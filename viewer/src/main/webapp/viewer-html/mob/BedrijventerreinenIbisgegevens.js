@@ -129,6 +129,10 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 scrollable: true,
                 padding: 10
             },
+            listeners:{
+                scope:this,
+                tabchange:this.createTooltips
+            },
             bbar: [
                 { xtype: 'container', itemId: 'edit-indicator' },
                 '->',
@@ -539,7 +543,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     createTooltips: function () {
         Ext.QuickTips.init();
         Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=KERN_NAAM]")[0].getEl(), text: "Naam van de woonkern volgens de woonplaatsenlijst waarin of waarbij de werklocatie gelegen is."});
-        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=PLAN_FASE_CODE]")[0].getEl(), text: "Naam van de woonkern volgens de woonplaatsenlijst waarin of waarbij de werklocatie gelegen is."});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=PLAN_FASE_CODE]")[0].getEl(), text: "Als een werklocatie de planfase ‘ruimtelijk plan’ is gepasseerd wordt het opgenomen als werklocatie."});
         Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=GEM_CODE_CBS]")[0].getEl(), text: "Beheerder van het bedrijventerrein."});
         Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=WERKLOCATIE_TYPE_CODE]")[0].getEl(), text: "Terrein dat vanwege zijn bestemming bestemd en geschikt is voor gebruik door handel, nijverheid, commerciële en niet-commerciële dienstverlening en industrie."});
         Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=IND_PARK_MANAGEMENT]")[0].getEl(), text: "Aanwezigheid (score wel of niet) van een (gezamenlijke) beheerorganisatie."});
@@ -557,8 +561,6 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=BRUTO_OPP_VEROUDERD]")[0].getEl(), text: "Wat is het bruto oppervlak van de veroudering?"});
         Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=HERSTRUCT_PLAN_TYPE_CODE]")[0].getEl(), text: "Is er een herstructureringsplan?"});
         Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=HERSTRUCT_FASE_CODE]")[0].getEl(), text: "In welke fase bevindt het herstructureringsplan zich?"});
-        
-        
     },
     filterBedrijventerreinen: function(gemeente, peildatum) {
         if (gemeente) this.gemeente_code = gemeente;
