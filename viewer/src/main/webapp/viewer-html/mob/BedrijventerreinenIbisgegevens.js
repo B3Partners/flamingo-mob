@@ -755,6 +755,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             bereikbaarheid_validation.push("Vul de oppervlakte in, passend bij het gekozen Herstructereringsplan");
         }
         var bruto_oppervlak = +(this.bedrijventerrein.get("BRUTO_OPP"));
+        bruto_oppervlak = Number.isNaN(bruto_oppervlak) ? 0 : bruto_oppervlak;
         if (formData.BRUTO_OPP_VEROUDERD && bruto_oppervlak < +(formData.BRUTO_OPP_VEROUDERD)) {
             bereikbaarheid_validation.push(Ext.String.format("Bruto oppervlakte veroudering moet kleiner of gelijk zijn aan bruto oppervlak ({0} ha)", bruto_oppervlak));
         }
@@ -773,13 +774,8 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         if (formData.OPP_TRANSFORMATIE && bruto_oppervlak < +(formData.OPP_TRANSFORMATIE)) {
             bereikbaarheid_validation.push(Ext.String.format("Oppervlakte transformatie moet kleiner of gelijk zijn aan bruto oppervlak ({0} ha)", bruto_oppervlak));
         }
-        this.clearMessagesInContainer("#algemeen-errors");
-        this.clearMessagesInContainer("#bereikbaarheid-errors");
-        this.clearMessagesInContainer("#oppervlak-errors");
-        this.form.getTabBar().items.get(0).setIconCls("");
-        this.form.getTabBar().items.get(1).setIconCls("");
-        this.form.getTabBar().items.get(2).setIconCls("");
         var tabSet = false;
+        this.resetErrorsInTabs();
         if (algemeen_validation.length !== 0 || bereikbaarheid_validation.length !== 0 || oppervlak_validation.length !== 0) {
             tabSet = this.showErrorsInTab(algemeen_validation, "#algemeen-errors", 0, tabSet);
             tabSet = this.showErrorsInTab(bereikbaarheid_validation, "#bereikbaarheid-errors", 1, tabSet);
@@ -787,6 +783,14 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             return false;
         }
         return true;
+    },
+    resetErrorsInTabs:function(){
+        this.clearMessagesInContainer("#algemeen-errors");
+        this.clearMessagesInContainer("#bereikbaarheid-errors");
+        this.clearMessagesInContainer("#oppervlak-errors");
+        this.form.getTabBar().items.get(0).setIconCls("");
+        this.form.getTabBar().items.get(1).setIconCls("");
+        this.form.getTabBar().items.get(2).setIconCls("");
     },
     showErrorsInTab: function(validation, container, tabNo, tabSet) {
         if (validation.length !== 0) {
@@ -913,6 +917,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         this.setDisabled(false);
     },
     updateForms: function() {
+        this.resetErrorsInTabs();
         var bedrijventerrein = this.bedrijventerrein;
         var algemeenValues = {
             'KERN_NAAM': bedrijventerrein.get("BEDRIJVENTERREIN").get("KERN_NAAM"),
