@@ -543,7 +543,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     createTooltips: function () {
         Ext.QuickTips.init();
         Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=KERN_NAAM]")[0].getEl(), text: "Naam van de woonkern volgens de woonplaatsenlijst waarin of waarbij de werklocatie gelegen is."});
-        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=PLAN_FASE_CODE]")[0].getEl(), text: "Als een werklocatie de planfase ‘ruimtelijk plan’ is gepasseerd wordt het opgenomen als werklocatie."});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=PLAN_FASE_CODE]")[0].getEl(), text: "Als een werklocatie de planfase 'ruimtelijk plan' is gepasseerd wordt het opgenomen als werklocatie."});
         Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=GEM_CODE_CBS]")[0].getEl(), text: "Beheerder van het bedrijventerrein."});
         Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=WERKLOCATIE_TYPE_CODE]")[0].getEl(), text: "Terrein dat vanwege zijn bestemming bestemd en geschikt is voor gebruik door handel, nijverheid, commerciële en niet-commerciële dienstverlening en industrie."});
         Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=IND_PARK_MANAGEMENT]")[0].getEl(), text: "Aanwezigheid (score wel of niet) van een (gezamenlijke) beheerorganisatie."});
