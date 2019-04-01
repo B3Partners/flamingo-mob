@@ -761,7 +761,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             bereikbaarheid_validation.push("Vul de oppervlakte in, passend bij het gekozen Herstructereringsplan");
         }
         var bruto_oppervlak = +(this.bedrijventerrein.get("BRUTO_OPP"));
-        bruto_oppervlak = Number.isNaN(bruto_oppervlak) ? 0 : bruto_oppervlak;
+        bruto_oppervlak = isNaN(bruto_oppervlak) ? 0 : bruto_oppervlak;
         if (formData.BRUTO_OPP_VEROUDERD && bruto_oppervlak < +(formData.BRUTO_OPP_VEROUDERD)) {
             bereikbaarheid_validation.push(Ext.String.format("Bruto oppervlakte veroudering moet kleiner of gelijk zijn aan bruto oppervlak ({0} ha)", bruto_oppervlak));
         }
