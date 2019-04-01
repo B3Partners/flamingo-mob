@@ -561,6 +561,12 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=BRUTO_OPP_VEROUDERD]")[0].getEl(), text: "Wat is het bruto oppervlak van de veroudering?"});
         Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=HERSTRUCT_PLAN_TYPE_CODE]")[0].getEl(), text: "Is er een herstructureringsplan?"});
         Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=HERSTRUCT_FASE_CODE]")[0].getEl(), text: "In welke fase bevindt het herstructureringsplan zich?"});
+                
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=OPP_FACELIFT]")[0].getEl(), text: "Zie help voor meer informatie."});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=OPP_REVITALISATIE]")[0].getEl(), text: "Zie help voor meer informatie."});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=OPP_ZWARE_REVITALISATIE]")[0].getEl(), text: "Zie help voor meer informatie."});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=OPP_HERPROFILERING]")[0].getEl(), text: "Zie help voor meer informatie."});
+        Ext.QuickTips.register({target: Ext.ComponentQuery.query("[name=OPP_TRANSFORMATIE]")[0].getEl(), text: "Zie help voor meer informatie."});
     },
     filterBedrijventerreinen: function(gemeente, peildatum) {
         if (gemeente) this.gemeente_code = gemeente;
