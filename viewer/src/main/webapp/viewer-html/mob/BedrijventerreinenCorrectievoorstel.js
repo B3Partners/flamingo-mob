@@ -47,7 +47,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.vectorLayer = this.config.viewerController.mapComponent.createVectorLayer({
             name: this.config.name + 'VectorLayer',
             geometrytypes: ["Polygon"],
-            showmeasures: true,
+            showmeasures: false,
             viewerController: this.config.viewerController,
             allowselection: true,
             style: {
