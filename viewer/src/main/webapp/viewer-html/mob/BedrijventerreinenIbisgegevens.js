@@ -355,7 +355,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             },
             items: [
                 { xtype: 'container', itemId: 'oppervlak-errors' },
-                { xtype: 'combobox', editable: false, queryMode: 'local', name: 'IND_VOL', fieldLabel: 'Vol', readOnly: true, store: this.stores.indicatie_vol },
+                { xtype: 'textfield', editable: false, queryMode: 'local', name: 'IND_VOL', fieldLabel: 'Vol', readOnly: true, store: this.stores.indicatie_vol },
                 {
                     xtype: 'gridpanel',
                     viewConfig: {
