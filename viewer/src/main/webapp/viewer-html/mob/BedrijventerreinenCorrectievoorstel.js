@@ -43,27 +43,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         viewer.components.BedrijventerreinenCorrectievoorstel.superclass.constructor.call(this, this.config);
 
         viewer.components.BedrijventerreinenBase.defineModels();
-        
-        this.vectorLayer = this.config.viewerController.mapComponent.createVectorLayer({
-            name: this.config.name + 'VectorLayer',
-            geometrytypes: ["Polygon"],
-            showmeasures: false,
-            viewerController: this.config.viewerController,
-            allowselection: true,
-            style: {
-                fillcolor: "FF0000",
-                fillopacity: 40,
-                strokecolor: "FF0000",
-                strokeopacity: 100
-            }
-        });
-        this.config.viewerController.registerSnappingLayer(this.vectorLayer);
-        this.config.viewerController.mapComponent.getMap().addLayer(this.vectorLayer);
 
-        this.vectorLayer.addListener(viewer.viewercontroller.controller.Event.ON_FEATURE_ADDED, function () {
-            this.container.show();
-            this.showDrawingHint(false);
-        }, this);
         this.geometryEditable = true;
         this.config.allowDelete = true;
         this.appLayer = this.config.viewerController.getAppLayerById(this.config.layer);
@@ -243,7 +223,12 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             this.indienbutton.setDisabled(true);            
         }
         this.buttonContainer.setLoading(false);
+        this.vectorLayer.addListener(viewer.viewercontroller.controller.Event.ON_FEATURE_ADDED, function () {
+            this.container.show();
+            this.showDrawingHint(false);
+        }, this);
     },
+    showAndFocusForm: function(){},
     resize: function() {
         if (!this.poupRendered) {
             return;
@@ -613,6 +598,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                     xtype: 'numberfield',
                     fieldLabel: 'Verwachte uitgifte (hectare)',
                     itemId: 'uitgifte',
+                    decimalSeparator: ",",
                     labelWidth: 200,
                     value: this.verwachteUitgifte || ""
                 }
@@ -625,8 +611,10 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                     listeners: {
                         scope: this,
                         click: function (btn) {
-                            var allotment = uitgifteWindow.query("#uitgifte")[0].getValue();
+                            var allotment = ""+ uitgifteWindow.query("#uitgifte")[0].getValue();
                             if (allotment) {
+                                this.verwachteUitgifte = allotment;
+                                allotment = allotment.replace(".",",");
                                 this.submitExpectedAllotment(allotment, uitgifteWindow);
                             } else {
                                 Ext.MessageBox.alert("Fout", "Hoeveelheid hectare is niet ingevuld.");
@@ -638,20 +626,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         });
         uitgifteWindow.show();
     },
-    confirmExpectedAllotment: function(allotment, uitgifteWindow) {
-        Ext.MessageBox.show({
-            title: 'Weet u het zeker?',
-            message: 'Weet u zeker dat u de verwachte uitgifte wilt indienen?',
-            buttons: Ext.Msg.YESNO,
-            icon: Ext.Msg.QUESTION,
-            scope: this,
-            fn: function (btn) {
-                if (btn === 'yes') {
-                    this.submitExpectedAllotment(allotment, uitgifteWindow);
-                }
-            }
-        });
-    },
+    
     submitExpectedAllotment: function(allotment, uitgifteWindow) {
         Ext.Ajax.request({
             url: actionBeans["mobeditfeature"],

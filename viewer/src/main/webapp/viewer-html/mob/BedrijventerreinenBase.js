@@ -239,6 +239,10 @@ Ext.define ("viewer.components.BedrijventerreinenBase", {
                     scope.ibisIngediend = response.IND_IBIS_INGEDIEND_JN === 'J';
                     scope.uitgifteIngevuld = response.VERWACHTE_UITGIFTE !== null && response.VERWACHTE_UITGIFTE !== undefined;
                     scope.verwachteUitgifte = response.VERWACHTE_UITGIFTE;
+                    if(scope.verwachteUitgifte){
+                        scope.verwachteUitgifte = "" + scope.verwachteUitgifte;
+                        scope.verwachteUitgifte = scope.verwachteUitgifte.replace(".",",");
+                    }
                     successFunction.call(scope);
                 } else {
                     this.showErrorDialog("Kan benodigde gegevens voor bedrijventerreinen niet ophalen.");
