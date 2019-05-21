@@ -858,7 +858,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         });
     },
     submitConfirm: function() {
-        var gemeente = this.stores.gemeentes.findRecord("GEM_CODE_CBS", this.gemeente_code);
+        var gemeente = this.stores.gemeentes.findRecord("GEM_CODE_CBS", this.gemeente_code, 0, false, false, true);
         var gemeente_naam = "";
         if (gemeente) {
             gemeente_naam = gemeente.get("GEMEENTE_NAAM");
