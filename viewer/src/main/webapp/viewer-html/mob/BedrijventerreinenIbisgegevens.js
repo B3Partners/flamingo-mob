@@ -164,7 +164,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             },
             items: [
                 { xtype: 'container', itemId: 'algemeen-errors' },
-                { fieldLabel: "Kernnaam", name: 'KERN_NAAM' },
+                { fieldLabel: "Kernnaam",  editable: false, name: 'KERN_NAAM' },
                 { xtype: 'combobox', editable: false, name: 'PLAN_FASE_CODE', fieldLabel: "Planfase",  queryMode: 'local',
                     store: this.stores.planfase, displayField: 'PLAN_FASE_NAAM', valueField: 'CODE' },
                 { xtype: 'combobox', editable: false, name: 'GEM_CODE_CBS', fieldLabel: "Terreinbeheerder", queryMode: 'local',
@@ -973,9 +973,17 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             uitgifte_huidig_jaar: { oppervlak: bedrijventerrein.get("UITGIFTE_HUIDIG_PEILJAAR_OPP") },
             terugkoop: { oppervlak: bedrijventerrein.get("OPP_TERUGKOOP_GEMEENTE") }
         });
+        var planfasecode = bedrijventerrein.get("PLAN_FASE_CODE");
+        planfasecode = planfasecode !== "" ? parseInt(planfasecode) : -1;
         this.updateGrid(this.stores.uitgeefbaar, {
-            terstond_uitgeefbaar: { overheid: bedrijventerrein.get("UITGEEFBAAR_OVERH_OPP"),particuler: bedrijventerrein.get("UITGEEFBAAR_PART_OPP") },
-            // niet_terstond_uitgeefbaar: { overheid: '', particuler: '' },
+            terstond_uitgeefbaar: { 
+                overheid:   ( planfasecode === 1 ? bedrijventerrein.get("UITGEEFBAAR_OVERH_OPP") : ""),
+                particulier: ( planfasecode === 1 ? bedrijventerrein.get("UITGEEFBAAR_PART_OPP") : "") 
+            },
+            niet_terstond_uitgeefbaar: {
+                overheid:   ( planfasecode > 1 ? bedrijventerrein.get("UITGEEFBAAR_OVERH_OPP") : ""),
+                particulier: ( planfasecode > 1 ? bedrijventerrein.get("UITGEEFBAAR_PART_OPP") : "") 
+            },
             grootst_uitgeefbaar_deel: { overheid: bedrijventerrein.get("GROOTST_UITGEEFB_DEEL_OPP"), particuler: '' }
         });
         this.showEditing(false);
