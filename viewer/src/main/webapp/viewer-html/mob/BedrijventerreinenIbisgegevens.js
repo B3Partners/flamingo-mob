@@ -260,7 +260,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                     header: false,
                     store: this.stores.mutaties,
                     columns: [
-                        { header: '', dataIndex: 'label', flex: 1 },
+                        { header: 'Laatste wijziging', dataIndex: 'label', flex: 1 },
                         { header: 'Datum', dataIndex: 'datum', flex: 1 },
                         { header: 'Door', dataIndex: 'bewerker', flex: 1 }
                     ]

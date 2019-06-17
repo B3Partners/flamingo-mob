@@ -538,6 +538,8 @@ public class MOBEditActionBean extends EditFeatureActionBean {
             } catch (IOException ex) {
                 log.error("Cannot read upload: ", ex);
             }
+        }else{
+            f.put("UPLOAD", "");
         }
         return f;
     }
