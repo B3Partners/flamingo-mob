@@ -181,7 +181,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 ),
                 this.createColumnForm(
                     { xtype: 'textfield', name: 'START_JAAR', fieldLabel: "Startjaar uitgifte" },
-                    { xtype: 'textfield', name: 'JAAR_NIET_TERSTOND_UITG_GEM', fieldLabel: "Beoogd jaar niet terstond uitgeefbaar" }
+                    { xtype: 'textfield', name: 'JAAR_NIET_TERSTOND_UITG_GEM', fieldLabel: "Beoogd jaar uitgeefbaar" }
                 ),
                 {
                     xtype: 'gridpanel',
