@@ -143,6 +143,8 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.reset();
         this.resetForm();
         this.mode = "new";
+        this.inputContainer.query("#save-button")[0].setDisabled(false);
+        this.inputContainer.query("#remove-button")[0].setDisabled(false);
         this.vectorLayer.drawFeature("Polygon");
         this.showDrawingHint(true);
        //var feat = Ext.create(viewer.viewercontroller.controller.Feature, {wktgeom: "POLYGON((223790 504638,228844 508832.16,232661.12 504585,229166 502918,223790 504638))"});
