@@ -423,63 +423,78 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     createButtons: function () {
         var buttons = [];
         var user = FlamingoAppLoader.get("user");
-        var isGemeente = user.roles.hasOwnProperty("gemeente");
-        if (isGemeente) {
-            this.cvbutton = Ext.create('Ext.Button', {
-                text: 'Correctievoorstel',
-                disabled: this.ingediend,
-                tooltip: "Een correctievoorstel aanmaken",
-                listeners: {
-                    scope: this,
-                    click: this.newCorrection
-                }
-            });
-            this.vubutton = Ext.create('Ext.Button', {
-                text: 'Verwachte uitgifte',
-                disabled: this.ingediend,
-                tooltip: "Verwachte uitgifte voor het volgende half jaar (vanaf peildatum meting) opgeven.",
-                listeners: {
-                    scope: this,
-                    click: this.showExpectedAllotmentWindow
-                }
-            });
+        if(user) {
+            var isGemeente = user.roles.hasOwnProperty("gemeente");
+            if (isGemeente) {
+                this.cvbutton = Ext.create('Ext.Button', {
+                    text: 'Correctievoorstel',
+                    disabled: this.ingediend,
+                    tooltip: "Een correctievoorstel aanmaken",
+                    listeners: {
+                        scope: this,
+                        click: this.newCorrection
+                    }
+                });
+                this.vubutton = Ext.create('Ext.Button', {
+                    text: 'Verwachte uitgifte',
+                    disabled: this.ingediend,
+                    tooltip: "Verwachte uitgifte voor het volgende half jaar (vanaf peildatum meting) opgeven.",
+                    listeners: {
+                        scope: this,
+                        click: this.showExpectedAllotmentWindow
+                    }
+                });
 
-            this.indienbutton = Ext.create('Ext.Button', {
-                text: 'Indienen',
-                disabled: this.ingediend,
-                tooltip: "Alle correctievoorstellen en verwachte uitgifte indienen.",
-                listeners: {
-                    click: this.confirmSubmitCorrections,
-                    scope: this
-                }
-            });
+                this.indienbutton = Ext.create('Ext.Button', {
+                    text: 'Indienen',
+                    disabled: this.ingediend,
+                    tooltip: "Alle correctievoorstellen en verwachte uitgifte indienen.",
+                    listeners: {
+                        click: this.confirmSubmitCorrections,
+                        scope: this
+                    }
+                });
 
-            buttons.push(this.cvbutton);
-            buttons.push(this.vubutton);
-            buttons.push(this.indienbutton);
+                buttons.push(this.cvbutton);
+                buttons.push(this.vubutton);
+                buttons.push(this.indienbutton);
+            }
+            this.buttonContainer = Ext.create('Ext.container.Container', {
+                renderTo: Ext.get(this.config.viewerController.getMapId()),
+                floating: true,
+                shadow: false,
+                style: {
+                    zIndex: 1002,
+                    padding: 5,
+                    backgroundColor: "#FFFFFF",
+                    borderColor: "#5FA2DD",
+                    borderStyle: "solid",
+            //        width: '501px'
+
+                },
+                border: 2,
+                layout: {
+
+                    align: 'stretch',
+                 //   width: '502px'
+                },
+                items: [
+                    {xtype: 'container', items: buttons, border: false, defaults: {margin: '5px'},
+                        style: {fontWeight: 'bold'}},
+                    {
+                        xtype: 'container',
+                        itemId: 'draw-message',
+                        margin: '8 5 5 5',
+                        html: '',
+                        hidden: true,
+                        style: {fontWeight: 'bold'}
+                    }
+                ]
+            });
+            this.alignButtons();
+        }else{
+            Ext.MessageBox.alert(i18next.t('viewer_components_edit_20'), "U moet eerst inloggen.");
         }
-        this.buttonContainer = Ext.create('Ext.container.Container', {
-            renderTo: Ext.get(this.config.viewerController.getMapId()),
-            floating: true,
-            shadow: false,
-            style: {
-                zIndex: 1002,
-                padding: 5,
-                backgroundColor: "#FFFFFF",
-                borderColor: "#5FA2DD",
-                borderStyle: "solid"
-            },
-            border: 2,
-            layout: {
-                type: 'vbox',
-                align: 'stretch'
-            },
-            items: [
-                { xtype: 'container', items: buttons, border: false, defaults: { margin: '5px' } },
-                { xtype: 'container', itemId: 'draw-message', margin: '8 5 5 5', html: '', hidden: true, style: { fontWeight: 'bold' } }
-            ]
-        });
-        this.alignButtons();
     },
     alignButtons: function () {
         if (!this.buttonContainer) {

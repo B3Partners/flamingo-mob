@@ -31,6 +31,7 @@ import net.sourceforge.stripes.action.StreamingResolution;
 import net.sourceforge.stripes.action.StrictBinding;
 import net.sourceforge.stripes.action.UrlBinding;
 import net.sourceforge.stripes.validation.Validate;
+import nl.b3p.mail.Mailer;
 import nl.b3p.viewer.config.services.Layer;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
@@ -42,13 +43,13 @@ import org.geotools.data.Transaction;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.factory.CommonFactoryFinder;
-import org.geotools.factory.GeoTools;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.NameImpl;
 import org.geotools.filter.identity.FeatureIdImpl;
 import org.geotools.filter.text.cql2.CQLException;
 import org.geotools.filter.text.ecql.ECQL;
+import org.geotools.util.factory.GeoTools;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.opengis.feature.simple.SimpleFeature;
@@ -147,7 +148,6 @@ public class MOBEditActionBean extends EditFeatureActionBean {
             log.error("Unauthorized access");
             return new ErrorResolution(401, "Geen toegang");
         }
-        // @ToDo authorizations
         // create correctie status
         // set correctie_status_id on jsonfeature
         // CORRECTIESTATUS
@@ -176,6 +176,26 @@ public class MOBEditActionBean extends EditFeatureActionBean {
         return new StreamingResolution("text/xml", new StringReader(
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?><message success=\"true\"></message>"
         ));
+    }
+
+    private void mailMunicipality(String mailaddress, String username, String correctieStatus, String toelichting, String datum, String classificatie){
+        String subject = "Correctievoorstel verwerkt";
+        String fromMail = "noreply@b3partners.nl";
+        String fromName = "Provincie Overijssel";
+
+        String message = "Beste " +username + ", \n\n";
+        message += "Het correctievoorstel dat door u is ingediend is verwerkt. Het heeft nu de status " + correctieStatus + ". \n\n";
+        message += "Het gaat om het correctievoorstel met de volgende gegevens: \n";
+        message += "toelichting : " + toelichting + " \n";
+        message += "Datum: " + datum + " \n";
+        message += "Classificatie: " + classificatie + " \n";
+
+        String cc = "meine@b3p.nl";
+        try {
+            Mailer.sendMail(fromName, fromMail, mailaddress, subject, message, cc);
+        } catch (Exception e) {
+            log.error("Error sending statusupdate mail: ", e);
+        }
     }
 
     public Resolution retrieveVariables() {
