@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.security.Principal;
-import java.util.Calendar;
+import java.util.*;
 import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletRequest;
 import net.sourceforge.stripes.action.ErrorResolution;
@@ -157,19 +157,22 @@ public class MOBEditActionBean extends EditFeatureActionBean {
         
         HttpServletRequest req = getContext().getRequest();
         
-        if(req.isUserInRole("provincie") &&  jsonFeature.getInt("CORRECTIE_STATUS_ID") == 1){
+        if(req.isUserInRole("provincie") ){
 
-            try {
-                EntityManager em = Stripersist.getEntityManager();
-                Layer l = getAppLayer().getService().getLayer(getAppLayer().getLayerName(), em);
-                AGM_ID = jsonFeature.getInt("AGM_ID");
-                FeatureSource fs = l.getFeatureType().openGeoToolsFeatureSource();
-                SimpleFeatureStore d = (SimpleFeatureStore) fs;
-                JSONObject json = new JSONObject();
-                submitAfspraakgebiedMetingen(d, json, false);
-            } catch (Exception ex) {
-                log.error("Cannot reset afspraakgebiedmetingen to ingediend = N");
+            if( jsonFeature.getInt("CORRECTIE_STATUS_ID") == 1) {
+                try {
+                    EntityManager em = Stripersist.getEntityManager();
+                    Layer l = getAppLayer().getService().getLayer(getAppLayer().getLayerName(), em);
+                    AGM_ID = jsonFeature.getInt("AGM_ID");
+                    FeatureSource fs = l.getFeatureType().openGeoToolsFeatureSource();
+                    SimpleFeatureStore d = (SimpleFeatureStore) fs;
+                    JSONObject json = new JSONObject();
+                    submitAfspraakgebiedMetingen(d, json, false);
+                } catch (Exception ex) {
+                    log.error("Cannot reset afspraakgebiedmetingen to ingediend = N");
+                }
             }
+            mailMunicipality(meting);
         }
 
         // See https://docs.sencha.com/extjs/6.2.0/classic/Ext.form.action.Submit.html for error response
@@ -178,24 +181,106 @@ public class MOBEditActionBean extends EditFeatureActionBean {
         ));
     }
 
-    private void mailMunicipality(String mailaddress, String username, String correctieStatus, String toelichting, String datum, String classificatie){
-        String subject = "Correctievoorstel verwerkt";
-        String fromMail = "noreply@b3partners.nl";
+    private void mailMunicipality(String feature){
+        Map<Integer, String> correctieStatussen = new HashMap<>();
+        correctieStatussen.put(3, "In behandeling");
+        correctieStatussen.put(4, "Geaccepteerd");
+        correctieStatussen.put(1, "Opgeslagen");
+        correctieStatussen.put(6, "Vervallen");
+        correctieStatussen.put(2, "Ingediend");
+        correctieStatussen.put(5, "Afgewezen");
+
+
+        Map<Integer, String> classificaties = new HashMap<>();
+        classificaties.put(11, "Geen bedrijventerrein");
+        classificaties.put(12, "Langdurige verhuur");
+        classificaties.put(2, "Aanbod overheid");
+        classificaties.put(10, "IJskast - tijdelijke natuur (particulier)");
+        classificaties.put(1, "Uitgegeven");
+        classificaties.put(4, "Infra en overige bestemmingen");
+        classificaties.put(7, "IJskast - tijdelijke natuur (overheid)");
+        classificaties.put(8, "IJskast – zonnepark (particulier)");
+        classificaties.put(6, "IJskast – uitgifteverbod (overheid)");
+        classificaties.put(3, "Aanbod particulier");
+        classificaties.put(9, "IJskast – uitgifteverbod (particulier)");
+        classificaties.put(5, "IJskast – zonnepark (overheid)");
+
+        JSONObject feat = getJsonFeature(feature);
+        String agm_id = feat.getString("AGM_ID");
+        List<String> mailaddresses = getMailAddress(agm_id);
+
+        if(mailaddresses == null || mailaddresses.size() == 0){
+            return;
+        }
+        String subject = "MOB: statuswijziging correctievoorstel";
+       // String fromMail = "bedrijventerreinen@overijssel.nl";
+        String fromMail = "support@b3partners.nl";
         String fromName = "Provincie Overijssel";
+        String cc = null;
+        //String cc = "bedrijventerreinen@overijssel.nl";
+        int correctieStatus = feat.getInt("CORRECTIE_STATUS_ID");
+        int classificatie = feat.getInt("CLASSIFICATIE_ID");
+        String toelichting = feat.getString("TOELICHTING");
 
-        String message = "Beste " +username + ", \n\n";
-        message += "Het correctievoorstel dat door u is ingediend is verwerkt. Het heeft nu de status " + correctieStatus + ". \n\n";
-        message += "Het gaat om het correctievoorstel met de volgende gegevens: \n";
-        message += "toelichting : " + toelichting + " \n";
-        message += "Datum: " + datum + " \n";
-        message += "Classificatie: " + classificatie + " \n";
+        String message = "Beste indiener, \n\n";
+        message += "Het ingediende correctievoorstel in de MOB viewer is van status gewijzigd naar "
+                + correctieStatussen.get(correctieStatus)  +"\n" +
+                "\n" +
+                "Je voorgestelde classificatie: " + classificaties.get(classificatie) +"\n" +
+                "Toelichting: " + toelichting + " \n" +
+                "Status: " + correctieStatussen.get(correctieStatus) +"\n" +
+                "\n" +
+                "Vriendelijke groeten,\n" +
+                "Team MOB\n" +
+                "Provincie Overijssel";
 
-        String cc = "meine@b3p.nl";
         try {
-            Mailer.sendMail(fromName, fromMail, mailaddress, subject, message, cc);
+            log.error("Message: " + message);
+            //Mailer.sendMail(fromName, fromMail, String.join(",", mailaddresses), subject, message, cc);
         } catch (Exception e) {
             log.error("Error sending statusupdate mail: ", e);
         }
+    }
+
+    private List<String> getMailAddress(String agmId){
+        Layer l = getAppLayer().getService().getLayer(getAppLayer().getLayerName(), Stripersist.getEntityManager());
+        FeatureSource mainFs = null;
+        try {
+            mainFs = l.getFeatureType().openGeoToolsFeatureSource();
+            DataAccess da = mainFs.getDataStore();
+
+            FeatureSource afspraakgeb_metingen = da.getFeatureSource(new NameImpl("AFSPRAAKGEB_METINGEN"));
+
+            SimpleFeatureStore d = (SimpleFeatureStore) afspraakgeb_metingen;
+            Filter f = ECQL.toFilter("AGM_ID = '" + agmId + "'");
+            SimpleFeatureCollection fc = d.getFeatures(f);
+            FeatureIterator<SimpleFeature> it = fc.features();
+            SimpleFeature feature = null;
+            while (it.hasNext()) {
+                feature = it.next();
+            }
+            Object agId = feature.getAttribute("AFSPRAAKGEBIED_ID");
+
+            FeatureSource gebruikersauth = da.getFeatureSource(new NameImpl("GEBRUIKERSAUTORISATIE"));
+            SimpleFeatureStore gebruiksAuthStore = (SimpleFeatureStore) gebruikersauth;
+            Filter agFilter = ECQL.toFilter("AG_ID = '" + agId + "'");
+            SimpleFeatureCollection authFc = gebruiksAuthStore.getFeatures(agFilter);
+            FeatureIterator<SimpleFeature> gebIt = authFc.features();
+            SimpleFeature geb = null;
+            List<String> mails = new ArrayList<>();
+            while (gebIt.hasNext()) {
+                geb = gebIt.next();
+                String mail = (String)geb.getAttribute("MAILADDRESS");
+                mails.add(mail);
+            }
+
+            return mails;
+        } catch (Exception e) {
+            log.error("Cannot retrieve mailaddress", e);
+        }finally {
+            mainFs.getDataStore().dispose();
+        }
+        return null;
     }
 
     public Resolution retrieveVariables() {
