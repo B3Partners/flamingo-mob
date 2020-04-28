@@ -618,6 +618,8 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
     },
     createStores: function() {
         var gemeenteStore = this.createDefaultMobAjaxStore('Bedrijventerreinen.model.Gemeenten', "GEMEENTEN");
+        var gemSorters = gemeenteStore.getSorters();
+        gemSorters.add("GEMEENTE_NAAM");
         var peildatumsStore = this.createDefaultMobAjaxStore('Bedrijventerreinen.model.Metingen', "METINGEN");
         var bedrijventerreinenMetingenStore = this.createDefaultMobAjaxStore(
             'Bedrijventerreinen.model.BedrijventerreinenMetingen',
