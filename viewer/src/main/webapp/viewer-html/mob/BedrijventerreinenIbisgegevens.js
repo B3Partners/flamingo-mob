@@ -264,8 +264,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                         { header: 'Datum', dataIndex: 'datum', flex: 1 },
                         { header: 'Door', dataIndex: 'bewerker', flex: 1 }
                     ]
-                },
-                { xtype: 'textarea', name: 'OPMERKING_TBV_IBIS', grow: true, growMax: 300, growMin: 100, fieldLabel: 'Opmerkingen', labelAlign: 'top' }
+                }
             ]
         });
         return this.algemeenForm;
@@ -670,15 +669,15 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
                 { id: 'netto', label: 'Netto', oppervlak: '', tt:"Netto oppervlakte (in ha) van de werklocatie." },
                 { id: 'uitgegeven', label: 'Uitgegeven', oppervlak: '', tt:"De uitgegeven oppervlakte (in netto ha) van de werklocatie tot een jaar voorafgaand aan de peildatum." },
                 { id: 'uitgifte_huidig_jaar', label: 'Uitgifte huidig jaar', oppervlak: '', tt:"Uitgegeven oppervlak werklocatieterrein (in ha) in het afgelopen peiljaar." },
-                { id: 'terugkoop', label: 'Terugkoop', oppervlak: '', editable: true, tt:"Teruggekochte oppervlakte (in ha) in gemeentelijke eigendom." }
+                { id: 'terugkoop', label: 'Terugkoop', oppervlak: '', editable: true, tt:"Teruggekochte oppervlakte (in ha) in gemeentelijke eigendom." },
+                { id: 'grootst_uitgeefbaar_deel', label: 'Grootst uitgeefbaar deel', oppervlak: '', tt: 'Netto oppervlakte van het grootste aaneengesloten uitgeefbaar deel in '}
             ]
         });
         var uitgeefbaarStore = Ext.create('Ext.data.Store', {
             fields: [ 'label', 'overheid', 'particulier' ],
             data: [
                 { id: 'terstond_uitgeefbaar', label: 'Terstond uitgeefbaar', overheid: '', particulier: '', tt: 'Aanbod bouwrijpe werklocaties in ' },
-                { id: 'niet_terstond_uitgeefbaar', label: 'Niet terstond uitgeefbaar', overheid: '', particulier: '', tt: 'Aanbod niet-bouwrijpe werklocaties in ' },
-                { id: 'grootst_uitgeefbaar_deel', label: 'Grootst uitgeefbaar deel', overheid: '', particulier: '', tt: 'Netto oppervlakte van het grootste aaneengesloten uitgeefbaar deel in '}
+                { id: 'niet_terstond_uitgeefbaar', label: 'Niet terstond uitgeefbaar', overheid: '', particulier: '', tt: 'Aanbod niet-bouwrijpe werklocaties in ' }
             ]
         });
         this.stores = {
@@ -936,8 +935,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             'IND_MILIEUZONERING': bedrijventerrein.get("IND_MILIEUZONERING"),
             'MAX_MILEUCATEGORIE_CODE': bedrijventerrein.get("MAX_MILEUCATEGORIE_CODE"),
             'START_JAAR': bedrijventerrein.get("BEDRIJVENTERREIN").get("START_JAAR") || '',
-            'JAAR_NIET_TERSTOND_UITG_GEM': bedrijventerrein.get("JAAR_NIET_TERSTOND_UITG_GEM") || '',
-            'OPMERKING_TBV_IBIS': bedrijventerrein.get("OPMERKING_TBV_IBIS")
+            'JAAR_NIET_TERSTOND_UITG_GEM': bedrijventerrein.get("JAAR_NIET_TERSTOND_UITG_GEM") || ''
         };
         this.algemeenForm.getForm().setValues(algemeenValues);
         this.updateGrid(this.stores.prijzen, {
@@ -973,7 +971,8 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             netto: { oppervlak: bedrijventerrein.get("NETTO_OPP") },
             uitgegeven: { oppervlak: bedrijventerrein.get("UITGEGEVEN_OPP") },
             uitgifte_huidig_jaar: { oppervlak: bedrijventerrein.get("UITGIFTE_HUIDIG_PEILJAAR_OPP") },
-            terugkoop: { oppervlak: bedrijventerrein.get("OPP_TERUGKOOP_GEMEENTE") }
+            terugkoop: { oppervlak: bedrijventerrein.get("OPP_TERUGKOOP_GEMEENTE") },
+            grootst_uitgeefbaar_deel: { oppervlak: bedrijventerrein.get("GROOTST_UITGEEFB_DEEL_OPP") }
         });
         var planfasecode = bedrijventerrein.get("PLAN_FASE_CODE");
         planfasecode = planfasecode !== "" ? parseInt(planfasecode) : -1;
@@ -985,8 +984,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
             niet_terstond_uitgeefbaar: {
                 overheid:   ( planfasecode > 1 ? bedrijventerrein.get("UITGEEFBAAR_OVERH_OPP") : ""),
                 particulier: ( planfasecode > 1 ? bedrijventerrein.get("UITGEEFBAAR_PART_OPP") : "") 
-            },
-            grootst_uitgeefbaar_deel: { overheid: bedrijventerrein.get("GROOTST_UITGEEFB_DEEL_OPP"), particuler: '' }
+            }
         });
         this.showEditing(false);
     },

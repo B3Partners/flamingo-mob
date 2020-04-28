@@ -77,7 +77,6 @@ Ext.define ("viewer.components.BedrijventerreinenBase", {
                 { name: 'UITGEGEVEN_OPP', type: 'number' },
                 { name: 'OPP_TERUGKOOP_GEMEENTE', type: 'number' },
                 { name: 'PLAN_FASE_CODE', type: 'string' },
-                { name: 'OPMERKING_TBV_IBIS', type: 'string' },
                 { name: 'IND_VOL', type: 'string' },
                 { name: 'JAAR_NIET_TERSTOND_UITG_GEM', type: 'string' },
                 { name: 'MIN_VERKOOPPRIJS', type: 'number' },
