@@ -331,7 +331,7 @@ public class MOBEditActionBean extends EditFeatureActionBean {
                     ibisNow.set(Calendar.AM_PM, Calendar.AM);
 
                     // peildatum ibis: 1 januari huidig jaar
-                    Filter f = ff.equals(ff.property("PEILDATUM"), ff.literal(ibisNow.getTime())); //ECQL.toFilter("PEILDATUM = " + ibisNow);
+                    Filter f = ff.equals(ff.property("PEILDATUM"), ff.literal(ibisNow.getTime()));
                     SimpleFeatureCollection fc = d.getFeatures(f);
                     FeatureIterator<SimpleFeature> it = fc.features();
                     SimpleFeature feature = null;

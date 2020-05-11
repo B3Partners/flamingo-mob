@@ -51,7 +51,7 @@ Ext.define ("viewer.components.BedrijventerreinenIbisgegevens", {
         viewer.components.BedrijventerreinenBase.defineModels();
         this.loadWindow();
         this.container.setLoading("Bezig met laden...");
-        viewer.components.BedrijventerreinenBase.initializeEnvironmentVariables(conf.layer, this.initialize, this);
+        viewer.components.BedrijventerreinenBase.initializeEnvironmentVariables(conf.layer, this.initialize, this, true);
         return this;
     },
     initialize: function() {

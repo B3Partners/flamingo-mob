@@ -171,7 +171,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         this.createButtons();
         var mask = this.buttonContainer.setLoading("Laden...");
         this.updateMaskLayout(mask);
-        viewer.components.BedrijventerreinenBase.initializeEnvironmentVariables(this.layer, this.initComp, this);
+        viewer.components.BedrijventerreinenBase.initializeEnvironmentVariables(this.layer, this.initComp, this, false);
     },
 
     updateMaskLayout: function(mask) {

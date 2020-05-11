@@ -207,7 +207,7 @@ Ext.define ("viewer.components.BedrijventerreinenBase", {
             ]
         });
     },
-    initializeEnvironmentVariables:function(layer, successFunction, scope) {
+    initializeEnvironmentVariables:function(layer, successFunction, scope, ibis) {
         // agm_id
         // meting id
         // gemeente
@@ -231,7 +231,7 @@ Ext.define ("viewer.components.BedrijventerreinenBase", {
                 if (response.success) {
                     scope.agm_id = response.AGM_ID;
                     scope.ag_id = response.AG_ID;
-                    scope.meting_id = response.MOB_MTG_ID;
+                    scope.meting_id = ibis ? response.IBIS_MTG_ID : response.MOB_MTG_ID;
                     scope.gemeente_code = response.GEM_CODE_CBS;
                     scope.peildatum_mob = response.MOB_PEILDATUM;
                     scope.ingediend = response.IND_CORRECTIES_INGEDIEND_JN === 'J';
