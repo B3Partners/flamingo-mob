@@ -213,8 +213,8 @@ public class MOBEditActionBean extends EditFeatureActionBean {
             return;
         }
         String subject = "MOB: statuswijziging correctievoorstel";
-       // String fromMail = "bedrijventerreinen@overijssel.nl";
-        String fromMail = "support@b3partners.nl";
+        String fromMail = "bedrijventerreinen@overijssel.nl";
+        //String fromMail = "support@b3partners.nl";
         String fromName = "Provincie Overijssel";
         String cc = null;
         //String cc = "bedrijventerreinen@overijssel.nl";
