@@ -16,22 +16,8 @@
  */
 package nl.b3p.viewer.stripes;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.security.Principal;
-import java.util.*;
-import javax.persistence.EntityManager;
-import javax.servlet.http.HttpServletRequest;
-import net.sourceforge.stripes.action.ErrorResolution;
-import net.sourceforge.stripes.action.FileBean;
-import net.sourceforge.stripes.action.Resolution;
-import net.sourceforge.stripes.action.StreamingResolution;
-import net.sourceforge.stripes.action.StrictBinding;
-import net.sourceforge.stripes.action.UrlBinding;
+import net.sourceforge.stripes.action.*;
 import net.sourceforge.stripes.validation.Validate;
-import nl.b3p.mail.Mailer;
 import nl.b3p.viewer.config.services.Layer;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
@@ -55,7 +41,18 @@ import org.json.JSONObject;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
+import org.opengis.filter.sort.SortBy;
+import org.opengis.filter.sort.SortOrder;
 import org.stripesstuff.stripersist.Stripersist;
+
+import javax.persistence.EntityManager;
+import javax.servlet.http.HttpServletRequest;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.security.Principal;
+import java.util.*;
 
 /**
  *
@@ -322,44 +319,15 @@ public class MOBEditActionBean extends EditFeatureActionBean {
                 {
                     FeatureSource fs = da.getFeatureSource(new NameImpl("METINGEN"));
                     SimpleFeatureStore d = (SimpleFeatureStore) fs;
-                    Calendar ibisNow = Calendar.getInstance();
-                    ibisNow.set(Calendar.MONTH, 0);
-                    ibisNow.set(Calendar.DAY_OF_MONTH, 1);
-                    ibisNow.set(Calendar.HOUR, 0);
-                    ibisNow.set(Calendar.MINUTE, 0);
-                    ibisNow.set(Calendar.SECOND, 0);
-                    ibisNow.set(Calendar.AM_PM, Calendar.AM);
 
-                    // peildatum ibis: 1 januari huidig jaar
-                    Filter f = ff.equals(ff.property("PEILDATUM"), ff.literal(ibisNow.getTime()));
-                    SimpleFeatureCollection fc = d.getFeatures(f);
-                    FeatureIterator<SimpleFeature> it = fc.features();
-                    SimpleFeature feature = null;
-                    while (it.hasNext()) {
-                        feature = it.next();
-                    }
+                    SimpleFeature feature = getIBISMeting(ff,d);
                     if (feature != null) {
                         json.put("IBIS_MTG_ID", feature.getAttribute("MTG_ID"));
                         json.put("IBIS_PEILDATUM", feature.getAttribute("PEILDATUM"));
                     }
 
-                    // peildatum mob: 1 januari of 1 juli huidig jaar + indicatie vastgesteld
-                    Calendar mobNow = Calendar.getInstance();
-                    mobNow.set(Calendar.MONTH, mobNow.get(Calendar.MONTH) > 6 ? 6 : 0);
-                    mobNow.set(Calendar.DAY_OF_MONTH, 1);
-                    mobNow.set(Calendar.HOUR, 0);
-                    mobNow.set(Calendar.MINUTE, 0);
-                    mobNow.set(Calendar.SECOND, 0);
-                    mobNow.set(Calendar.AM_PM, Calendar.AM);
+                    SimpleFeature mobFeature = getMOBMeting(ff, d);
 
-                    // peildatum ibis: 1 januari huidig jaar
-                    Filter mobFilter = ff.equals(ff.property("PEILDATUM"), ff.literal(mobNow.getTime()));
-                    SimpleFeatureCollection mobFc = d.getFeatures(mobFilter);
-                    FeatureIterator<SimpleFeature> mobIterator = mobFc.features();
-                    SimpleFeature mobFeature = null;
-                    while (mobIterator.hasNext()) {
-                        mobFeature = mobIterator.next();
-                    }
                     if (mobFeature != null) {
                         json.put("MOB_MTG_ID", mobFeature.getAttribute("MTG_ID"));
                         json.put("MOB_PEILDATUM", mobFeature.getAttribute("PEILDATUM"));
@@ -397,6 +365,40 @@ public class MOBEditActionBean extends EditFeatureActionBean {
             log.error("Kan gegevens niet ophalen ", ex);
             return new ErrorResolution(500, "Kan gegevens niet ophalen" + ex.getLocalizedMessage());
         }
+    }
+
+    private SimpleFeature getMOBMeting(FilterFactory2 ff, SimpleFeatureStore d) throws IOException {
+        // peildatum mob: 1 januari of 1 juli huidig jaar + indicatie vastgesteld
+        SortBy sort = ff.sort("PEILDATUM", SortOrder.DESCENDING);
+        SimpleFeatureCollection mobFc = d.getFeatures();
+        mobFc = mobFc.sort(sort);
+        FeatureIterator<SimpleFeature> mobIterator = mobFc.features();
+        SimpleFeature mobFeature = null;
+        while (mobIterator.hasNext()) {
+            mobFeature = mobIterator.next();
+            break;
+        }
+        return mobFeature;
+    }
+
+    private SimpleFeature getIBISMeting(FilterFactory2 ff, SimpleFeatureStore d) throws IOException {
+        SortBy sort = ff.sort("PEILDATUM", SortOrder.DESCENDING);
+
+        SimpleFeatureCollection fc = d.getFeatures();
+        fc = fc.sort(sort);
+        FeatureIterator<SimpleFeature> it = fc.features();
+        SimpleFeature feature = null;
+        // peildatum ibis: 1 januari huidig jaar
+        while (it.hasNext()) {
+            feature = it.next();
+            Date pd = (Date) feature.getAttribute("PEILDATUM");
+            Calendar c = Calendar.getInstance();
+            c.setTime(pd);
+            if(c.get(Calendar.MONTH) == 0){
+                break;
+            }
+        }
+        return feature;
     }
 
     public Resolution submitExpectedAllotment() {
