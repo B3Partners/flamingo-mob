@@ -18,6 +18,7 @@ package nl.b3p.viewer.stripes;
 
 import net.sourceforge.stripes.action.*;
 import net.sourceforge.stripes.validation.Validate;
+import nl.b3p.mail.Mailer;
 import nl.b3p.viewer.config.services.Layer;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
@@ -233,7 +234,7 @@ public class MOBEditActionBean extends EditFeatureActionBean {
 
         try {
             log.error("Message: " + message);
-            //Mailer.sendMail(fromName, fromMail, String.join(",", mailaddresses), subject, message, cc);
+            Mailer.sendMail(fromName, fromMail, String.join(",", mailaddresses), subject, message, cc);
         } catch (Exception e) {
             log.error("Error sending statusupdate mail: ", e);
         }
