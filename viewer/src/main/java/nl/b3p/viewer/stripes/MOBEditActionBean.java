@@ -233,7 +233,7 @@ public class MOBEditActionBean extends EditFeatureActionBean {
                 "Provincie Overijssel";
 
         try {
-            log.error("Message: " + message);
+            log.debug("Message: " + message);
             Mailer.sendMail(fromName, fromMail, String.join(",", mailaddresses), subject, message, cc);
         } catch (Exception e) {
             log.error("Error sending statusupdate mail: ", e);
