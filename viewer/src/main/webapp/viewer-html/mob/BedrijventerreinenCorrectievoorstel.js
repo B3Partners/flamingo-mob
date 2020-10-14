@@ -402,7 +402,7 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
                     readOnly: true,
                     hidden:true,
                     format: 'd-m-Y',
-                    altFormats: 'd-m-y|d-m-Y H:i:s',
+                    altFormats: 'd-m-Y|d-m-Y H:i:s',
                     submitFormat: 'c',
                     name: fieldProps.datumName
                 },
