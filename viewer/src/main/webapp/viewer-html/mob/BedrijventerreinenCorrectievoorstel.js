@@ -585,12 +585,13 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
         var user = FlamingoAppLoader.get("user");
         if (user.roles.hasOwnProperty("gemeente")) {
             f.MUT_GEMEENTE_DOOR = user.name ;
-            f.MUTATIEDATUM_GEMEENTE = new Date();
+
+            f.MUTATIEDATUM_GEMEENTE = Ext.Date.format(new Date(), 'd-m-Y');
         }
 
         if (user.roles.hasOwnProperty("provincie")) {
             f.MUT_PROVINCIE_DOOR = user.name;
-            f.MUTATIEDATUM_PROVINCIE = new Date();
+            f.MUTATIEDATUM_PROVINCIE = Ext.Date.format(new Date(), 'd-m-Y');
         }
         
         return f;
