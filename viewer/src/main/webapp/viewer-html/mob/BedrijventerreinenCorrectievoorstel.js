@@ -85,6 +85,9 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     },
     featuresReceived: function (features) {
         var feat = features[0];
+
+        this.reset();
+        this.resetForm();
         this.editCorrection(feat);
     },
 
@@ -416,9 +419,13 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
     },
     resetForm: function(){
         var uploadContainer = this.inputContainer.query("#uploadContainer")[0];
-        uploadContainer.setFieldLabel("Upload");
         Ext.tip.QuickTipManager.unregister(uploadContainer.getId());
+        this.inputContainer.query('#gemeente_mutatie')[0].setHtml('')
+        this.inputContainer.query('#provincie_mutatie')[0].setHtml('')
         this.container.hide();
+        if(uploadContainer && uploadContainer.setFieldLabel){
+            uploadContainer.setFieldLabel("Upload");
+        }
     },
     createButtons: function () {
         var buttons = [];
@@ -587,11 +594,17 @@ Ext.define("viewer.components.BedrijventerreinenCorrectievoorstel", {
             f.MUT_GEMEENTE_DOOR = user.name ;
 
             f.MUTATIEDATUM_GEMEENTE = Ext.Date.format(new Date(), 'd-m-Y');
+        }else{
+            f.MUTATIEDATUM_GEMEENTE = Ext.Date.format(new Date(f.MUTATIEDATUM_GEMEENTE), 'd-m-Y');
         }
 
         if (user.roles.hasOwnProperty("provincie")) {
             f.MUT_PROVINCIE_DOOR = user.name;
             f.MUTATIEDATUM_PROVINCIE = Ext.Date.format(new Date(), 'd-m-Y');
+        }else{
+            if(f.MUTATIEDATUM_PROVINCIE){
+                f.MUTATIEDATUM_PROVINCIE = Ext.Date.format(new Date(f.MUTATIEDATUM_PROVINCIE), 'd-m-Y');
+            }
         }
         
         return f;
